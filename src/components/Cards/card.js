@@ -1,6 +1,6 @@
 import './card.css';
 
-const Card = ({ projectVideo, projectTitle, projectStack, projectDesc }) => {
+const Card = ({ projectVideo, projectTitle, projectStack, projectDesc, projectThumbnail }) => {
     return (
         <div className="card container w-full h-[385px]">
             <div className="content">
@@ -19,11 +19,7 @@ const Card = ({ projectVideo, projectTitle, projectStack, projectDesc }) => {
                     </div>
                 </div>
                 <div className="front">
-                    <div className="img">
-                        <div className="circle"></div>
-                        <div className="circle" id="right"></div>
-                        <div className="circle" id="bottom"></div>
-                    </div>
+                    <img src={projectThumbnail} alt={`${projectTitle} Thumbnail`} className='img' />
                     <div className="front-content">
                         <div className='flex flex-wrap gap-3'>
                             {projectStack && projectStack.map((stackItem, index) => (
