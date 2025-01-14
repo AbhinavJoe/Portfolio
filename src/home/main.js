@@ -21,26 +21,31 @@ export const PageMain = () => {
                 <div className="grid grid-cols-2 gap-6">
                     <Card
                         projectTitle={'Reactflow-X-DAG'}
-                        projectStack={['JavaScript', 'Python', 'React', 'ReactFlow', 'FastAPI', 'Zustand']}
+                        projectStack={['JavaScript', 'React', 'Zustand', 'ReactFlow', 'Python', 'FastAPI']}
                         projectDesc={'Sample Description'}
-                        projectVideo={"/videos/Reactflow_sample.mp4"}
+                        projectVideo={"/samples/Reactflow.mp4"}
+                        projectThumbnail={"/thumbnail/Reactflow.png"}
                     />
                     <Card
                         projectTitle={'FinCentrix: AI Powered Financial Advisory'}
-                        projectStack={['JavaScript', 'TypeScript', 'Next.js', 'Express', 'Docker', 'Microsoft Azure']}
+                        projectStack={['JavaScript', 'TypeScript', 'Next.js', 'Express', 'ChromaDB', 'Docker', 'Microsoft Azure']}
                         projectDesc={'FinCentrix is an innovative platform that offers personalized financial guidance, transforming how people handle their finances'}
-
+                        projectVideo={"/samples/FinCentrix.mp4"}
+                        projectThumbnail={"/thumbnail/FinCentrix.png"}
                     />
                     <Card
                         projectTitle={'Google Search Automation'}
                         projectStack={['Python', 'TkinterGUI']}
                         projectDesc={'A simple Python software to automate Google searches.'}
-                        projectVideo={"/videos/Google_sample.mp4"}
+                        projectVideo={"/samples/Google.mp4"}
+                        projectThumbnail={"/thumbnail/Google.png"}
                     />
                     <Card
-                        projectTitle={'RAGXLangchainJS'}
-                        projectStack={['JavaScript', 'Node.js', 'LangchainJS']}
+                        projectTitle={'RAG-X-Langchain-JS'}
+                        projectStack={['JavaScript', 'Node.js', 'ChromaDB', 'LangchainJS']}
                         projectDesc={'RAGXLangchainJS is a Multi-Doc RAG Application made using JavaScript, Node,js, LangChainJS, and ChromaDB to make your life easier.'}
+                        projectVideo={"/samples/RAGXLangchain.mp4"}
+                        projectThumbnail={"/thumbnail/RAGXLangchain.png"}
                     />
                 </div>
             </section>
