@@ -10,9 +10,9 @@ export const PageHeader = () => {
                     <h2 className="text-3xl mb-6">Web Developer</h2>
                     <p className='text-xl pr-4'>I am passionate about building efficient and scalable solutions. I possess a strong foundation in JavaScript, Python, and Data Structures and Algorithms (DSA), which allows me to tackle complex programming challenges.</p>
                     <p className='text-xl pr-4'>With experience in developing responsive and user-friendly web applications, as well as robust backends, I strive to bring creative, functional, and reliable systems to every project.</p>
-                    <a href='#target' className="inline-block border-b-2 border-black text-xl hover:opacity-75 transition-opacity" >
+                    {/* <a href='#target' className="inline-block border-b-2 border-black text-xl hover:opacity-75 transition-opacity" >
                         Download Resume
-                    </a>
+                    </a> */}
                 </div>
                 <div className="w-full md:w-1/2 pb-8 md:pb-0 md:order-2">
                     <div className="aspect-square overflow-hidden mt-8">

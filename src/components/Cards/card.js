@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import './card.css';
 
-const Card = ({ projectVideo, projectTitle, projectStack, projectDesc, projectThumbnail }) => {
-    const [isHover, SetIsHover] = useState(false)
-    const [userClick, setUserClick] = useState(false)
+const Card = ({ video, title, stack, desc, thumbnail, isActive, onClick, link }) => {
 
     return (
         <div className="card container w-full h-[395px]">
-            <div className="content">
+            <div className={`content ${isActive ? 'flipped' : ' hover:cursor-pointer'}`}>
                 <div className="back">
-                    <div className="back-content" onMouseOver={() => SetIsHover(true)} onMouseDown={() => SetIsHover(false)}>
+                    <div className="back-content">
                         <video
                             className="w-full h-full object-cover rounded-xl"
                             autoPlay
@@ -17,46 +14,58 @@ const Card = ({ projectVideo, projectTitle, projectStack, projectDesc, projectTh
                             muted
                             playsInline
                         >
-                            <source src={projectVideo} type="video/mp4" />
+                            <source src={video} type="video/mp4" />
                             Your browser does not support the video tag.
                         </video>
+                        <button
+                            type='button'
+                            className='button absolute bottom-2 right-2 w-fit bg-black text-white hover:bg-purple-300 font-bold'
+                            onClick={onClick}
+                        >
+                            Back to Details
+                        </button>
                     </div>
                 </div>
-                <div onClick={() => setUserClick(true)} className="front">
-                    <img src={projectThumbnail} alt={`${projectTitle} Thumbnail`} className='img' />
+                <div className="front">
+                    <img src={thumbnail} alt={`${title} thumbnail`} className='img' />
                     <div className="front-content">
                         <div className='flex flex-wrap gap-3'>
-                            {projectStack && projectStack.map((stackItem, index) => (
+                            {stack && stack.map((stackItem, index) => (
                                 <small className="badge" key={index}>{stackItem}</small>
                             ))}
                         </div>
-                        <div className="description">
-                            <div className="title">
-                                <p className="title">
-                                    <strong className=''>{projectTitle}</strong>
-                                </p>
-                                <svg
-                                    style={{
-                                        fillRule: "nonzero",
-                                        height: "15px",
-                                        width: "15px",
-                                        viewBox: "0 0 256 256",
-                                        xmlns: "http://www.w3.org/2000/svg"
-                                    }}
+                        <div>
+                            <div className='flex gap-4 pb-3'>
+                                <button
+                                    type='button'
+                                    className='button w-fit bg-black text-white hover:bg-purple-300 font-bold'
+                                    onClick={onClick}
                                 >
-                                    <g style={{ mixBlendMode: 'normal', textAnchor: "none", fontSize: "none", fontWeight: "none", fontFamily: "none", strokeDashoffset: "0", strokeDasharray: "", strokeMiterlimit: "10", strokeLinejoin: "miter", strokeLinecap: "butt", strokeWidth: "1", stroke: "none", fillRule: "nonzero", fill: "#20c997" }}>
-                                        <g style={{ transform: "scale(8,8)" }}>
-                                            <path d="M25,27l-9,-6.75l-9,6.75v-23h18z"></path>
-                                        </g>
-                                    </g>
-                                </svg>
+                                    Play Demo
+                                </button>
+                                <a
+                                    href={link}
+                                    target="_blank" // Optional: Opens in a new tab
+                                    rel="noopener noreferrer" // Improves security when opening new tabs
+                                    className="button w-fit bg-black text-white hover:bg-purple-300 font-bold"
+                                >
+                                    GitHub
+                                </a>
+
                             </div>
-                            <p className="card-desc">{projectDesc}</p>
+                            <div className="description">
+                                <div className="title">
+                                    <p className="title">
+                                        <strong className=''>{title}</strong>
+                                    </p>
+                                </div>
+                                <p className="card-desc">{desc}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
