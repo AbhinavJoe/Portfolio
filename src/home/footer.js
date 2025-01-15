@@ -2,8 +2,8 @@ import React from 'react';
 
 const PageFooter = () => {
     return (
-        <footer className="w-full h-fit py-5 flex justify-between container">
-            <div className='w-[35%]'>
+        <footer className="w-full h-fit flex flex-col md:flex-row py-16 justify-between container">
+            <div className='w-full md:w-[35%]'>
                 <span className="font-bold text-2xl">React out and Say Hi!</span>
                 <form className="flex flex-col gap-4 pt-4">
                     <div className="flex flex-col gap-2">
