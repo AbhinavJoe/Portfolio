@@ -49,16 +49,16 @@ export const PageMain = () => {
             <section className="mb-16">
                 <h2 className="font-bold text-2xl mb-8 underline">Languages</h2>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-                    <SkillBar lang={'JavaScript'} percent={'60'} />
-                    <SkillBar lang={'TypeScript'} percent={'60'} />
+                    <SkillBar lang={'JavaScript'} percent={'70'} />
+                    <SkillBar lang={'TypeScript'} percent={'70'} />
                     <SkillBar lang={'Python (Flask, FastAPI)'} percent={'50'} />
                     <SkillBar lang={'HTML5, CSS3'} percent={'55'} />
-                    <SkillBar lang={'MERN'} percent={'40'} />
+                    <SkillBar lang={'MERN'} percent={'45'} />
                     <SkillBar lang={'Git, GitHub'} percent={'70'} />
                 </div>
             </section>
-            <section>
-                <h2 className="font-bold text-2xl mb-8 underline">Notable s</h2>
+            <section className=''>
+                <h2 className="font-bold text-2xl mb-8 underline">Notable Projects</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {cardData.map((card, index) => (
                         <Card

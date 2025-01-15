@@ -1,6 +1,6 @@
 import { PageHeader } from "./header"
 import { PageMain } from "./main"
-import PageFooter from "./footer"
+import PageFooter from "./footer/footer"
 
 export const HomePage = () => {
     return (
