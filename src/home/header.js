@@ -19,7 +19,7 @@ export const PageHeader = () => {
                         <img
                             src={require("../assets/images/img.jpg")}
                             alt="Profile"
-                            className="w-full h-full object-cover object-top border-4 border-black"
+                            className="w-full h-full object-cover object-top rounded-full border-4 border-black"
                         />
                     </div>
                 </div>

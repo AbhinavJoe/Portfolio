@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import './card.css';
 
 const Card = ({ projectVideo, projectTitle, projectStack, projectDesc, projectThumbnail }) => {
+    const [isHover, SetIsHover] = useState(false)
+    const [userClick, setUserClick] = useState(false)
+
     return (
-        <div className="card container w-full h-[385px]">
+        <div className="card container w-full h-[395px]">
             <div className="content">
                 <div className="back">
-                    <div className="back-content">
+                    <div className="back-content" onMouseOver={() => SetIsHover(true)} onMouseDown={() => SetIsHover(false)}>
                         <video
-                            className="w-full h-full object-cover rounded-md"
+                            className="w-full h-full object-cover rounded-xl"
                             autoPlay
                             loop
                             muted
@@ -18,7 +22,7 @@ const Card = ({ projectVideo, projectTitle, projectStack, projectDesc, projectTh
                         </video>
                     </div>
                 </div>
-                <div className="front">
+                <div onClick={() => setUserClick(true)} className="front">
                     <img src={projectThumbnail} alt={`${projectTitle} Thumbnail`} className='img' />
                     <div className="front-content">
                         <div className='flex flex-wrap gap-3'>
