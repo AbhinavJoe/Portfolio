@@ -44,8 +44,12 @@ const Form = () => {
                 </div>
 
                 <button
-                    type="submit"
+                    type="button"
                     className="input bg-black text-white hover:bg-purple-300 hover:text-black font-bold mt-2 cursor-pointer"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        alert("The send message button doesn't work yet :(\nPlease drop me a message or connection on LinkedIn")
+                    }}
                 >
                     Send Message
                 </button>
