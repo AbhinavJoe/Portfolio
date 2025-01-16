@@ -2,9 +2,15 @@ import React from 'react';
 import { BiLinkExternal } from "react-icons/bi";
 
 
-const RepoCard = ({ name, url, desc, licence, createDate }) => {
+const RepoCard = ({ name, url, desc, licence, createDate, lastUpdate }) => {
     // Format date to be more readable
-    const formattedDate = new Date(createDate).toLocaleDateString('en-US', {
+    const createdDate = new Date(createDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+
+    const updatedDate = new Date(lastUpdate).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -40,7 +46,10 @@ const RepoCard = ({ name, url, desc, licence, createDate }) => {
                     </span>
                 )}
                 <span className="bg-purple-100 px-3 py-1 rounded-full">
-                    Created: {formattedDate}
+                    Created: {createdDate}
+                </span>
+                <span className="bg-purple-100 px-3 py-1 rounded-full">
+                    Last Updated: {updatedDate}
                 </span>
             </div>
         </div>

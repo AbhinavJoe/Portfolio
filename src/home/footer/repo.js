@@ -15,8 +15,9 @@ const Repo = () => {
                 url: repo.html_url,
                 description: repo.description,
                 createdAt: repo.created_at,
-                license: repo.license?.name || 'No License' // Handle cases where license might be null
-            }));
+                updatedAt: repo.updated_at,
+                license: repo.license?.name || 'No License', // Handle cases where license might be null
+            })).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)); // Sort by updated date
 
             setRepoData(formattedRepos);
         } catch (error) {
@@ -39,6 +40,7 @@ const Repo = () => {
                         desc={repo.description}
                         licence={repo.license}
                         createDate={repo.createdAt}
+                        lastUpdate={repo.updatedAt}
                     />
                 ))}
             </div>

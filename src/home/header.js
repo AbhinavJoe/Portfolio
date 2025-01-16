@@ -4,7 +4,7 @@ export const PageHeader = () => {
     return (
         <header className="h-fit md:h-screen w-full flex items-center container px-4 py-8 md:py-0">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div className="w-full md:w-1/2 space-y-6 order-2">
+                <div className="w-full md:w-1/2 p-4 space-y-6 order-2">
                     <span className="text-3xl font-medium">Hello, I'm</span>
                     <h1 className="text-6xl font-bold mb-4 font-serif">Abhinav Joshi</h1>
                     <p className='text-xl pr-4'>I am passionate about building efficient and scalable solutions. I possess a strong foundation in JavaScript, Python, and Data Structures and Algorithms (DSA), which allows me to tackle complex programming challenges.</p>

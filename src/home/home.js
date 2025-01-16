@@ -8,6 +8,7 @@ export const HomePage = () => {
             <PageHeader />
             <PageMain />
             <PageFooter />
+            <div className='static bottom-0 left-0 text-purple-200'>Abhinav Joshi | @AbhinavJoe &copy;</div>
         </div>
     )
 }
