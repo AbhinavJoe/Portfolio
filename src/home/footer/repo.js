@@ -30,7 +30,7 @@ const Repo = () => {
 
     return (
         <div className='h-full w-full border-[3px] border-black rounded-xl overflow-y-scroll'>
-            <div className='flex flex-col gap-1'>
+            <div className='flex flex-col gap-2'>
                 {repoData.map((repo, index) => (
                     <RepoCard
                         key={repo.name} // Using repo name as key is better than index

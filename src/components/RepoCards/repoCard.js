@@ -11,12 +11,12 @@ const RepoCard = ({ name, url, desc, licence, createDate }) => {
     });
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300 border border-purple-100">
-            <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-purple-900 hover:text-purple-700 transition-colors">
+        <div className="bg-gray-100 hover:bg-white shadow-md p-5 hover:shadow-2xl transition-all duration-300">
+            <div className="flex justify-between items-start">
+                <h3 className="text-xl font-bold hover:text-purple-500 transition-colors">
                     <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                         {name}
-                        <BiLinkExternal className="w-4 h-4" />
+                        <BiLinkExternal className="w-5 h-5" />
                     </a>
                 </h3>
                 {/* <div className="flex gap-4">
@@ -31,15 +31,15 @@ const RepoCard = ({ name, url, desc, licence, createDate }) => {
                 </div> */}
             </div>
 
-            <p className="text-gray-600 mb-4 line-clamp-2">{desc || 'No description available'}</p>
+            <p className="text-gray-600 mb-4 line-clamp-2 font-semibold">{desc || 'No description available'}</p>
 
             <div className="flex flex-wrap gap-3 items-center text-sm text-gray-500">
                 {licence && (
-                    <span className="bg-purple-50 px-3 py-1 rounded-full">
+                    <span className="bg-purple-100 px-3 py-1 rounded-full">
                         {licence}
                     </span>
                 )}
-                <span className="bg-purple-50 px-3 py-1 rounded-full">
+                <span className="bg-purple-100 px-3 py-1 rounded-full">
                     Created: {formattedDate}
                 </span>
             </div>
