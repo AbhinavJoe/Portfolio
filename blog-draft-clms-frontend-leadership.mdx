@@ -1,0 +1,134 @@
+---
+title: "Leading a Contract Lifecycle Platform's Frontend to Production"
+slug: "clms-frontend-leadership"
+date: "2026-08-21"
+tags: ["frontend", "nextjs", "redux-toolkit", "react-query", "engineering-leadership", "typescript"]
+company: "Panaroma Intelligence Solutions"
+role: "Software Engineer"
+excerpt: "How I took over and rebuilt the frontend of a multi-tenant contract/supplier lifecycle SaaS product, took it into production for two enterprise clients, and set the conventions two other engineers built against."
+---
+
+## TL;DR
+
+I inherited an early-stage frontend for a contract and supplier lifecycle management platform, restructured it around a clear client-state/server-state split (Redux Toolkit + React Query on Next.js 15), and carried it into production for two enterprise clients. Along the way I set the frontend's conventions from scratch and reviewed effectively every PR two other engineers wrote against them — which turned out to be a bigger job than any single feature I shipped.
+
+## Context & the problem
+
+The codebase started life as a different product's frontend that got forked and repointed at a new domain — contracts, suppliers, audits, negotiations — with the expectation it would eventually be unified back with the original. That history is still visible in the git log: the earliest commits are login and supplier screens carried over almost verbatim. The first real architectural layer — a single Redux store, a shared React Query client, route structure under `src/app` — shows up once ownership of the frontend moved to me.
+
+By the time "production for two enterprise clients" became the actual goal, "production" meant something specific: multi-tenant org isolation (`/dashboard/[orgId]`, a Superadmin role that drills into any org's data), SSO onboarding per org (`idp_alias`, `app_url`, `email_domain`, `sso_enabled` on the org create/update flow), per-org product entitlements (an org could be scoped to Contract Hub, Supplier Hub, or both, with UI gated accordingly), and session handling that didn't silently corrupt state on token expiry. None of that existed as a coherent system when I started — it existed as one-off patches on a fork.
+
+The other constraint was team size: two other engineers were writing frontend code against client rollout deadlines, with no shared convention for how a slice, a query hook, or a modal should be structured. Left alone, that produces exactly what you'd expect — and the codebase still carries a few scars from it.
+
+## Architecture & approach
+
+The stack is Next.js 15 on the App Router, TypeScript, Redux Toolkit for client state, and TanStack React Query for server state. The split is deliberate and enforced by convention:
+
+- **React Query owns anything from the API** — contract lists, supplier records, audit findings, org/user data. `src/lib/queryClient.ts` sets a shared 60s `staleTime` / 5min `gcTime` with window-focus/reconnect refetching off, so screens don't refetch on every tab switch.
+- **Redux Toolkit owns UI and cross-cutting client state** — the modal stack, sidebar collapse, upload-in-progress status, selected clause/highlight in the document viewer, active filters. `src/store/index.ts` composes ~80 slices under `src/store/slices/<domain>/`, one slice per concern.
+- Both are wired once, at the root, in `src/app/providers.tsx` — a Redux `Provider` wrapping a `QueryClientProvider`.
+
+```
+src/
+  app/                     # App Router routes: dashboard/[orgId], suppliers/[id]/contracts/[contractId], ...
+  components/<domain>/     # UI grouped by domain, not by type
+  hooks/<domain>/          # React Query hooks and other domain hooks
+  helpers/<domain>/        # API calls + data shaping, no JSX
+  store/
+    index.ts               # single configureStore
+    slices/<domain>/       # one slice per concern
+  lib/queryClient.ts        # shared QueryClient config
+```
+
+The conventions I wrote down and reviewed against were narrow on purpose:
+
+1. **Domain-first folders.** `components/`, `hooks/`, `helpers/`, and `store/slices/` all mirror the same domain names (`contracts`, `suppliers`, `investigation`, `hierarchy`, `dashboard`). Finding "everything about contract upload" means checking four folders with the same name, not grepping.
+2. **No API calls inside components.** Fetching and shaping live in `helpers/<domain>/`; components call a `hooks/<domain>/useX.ts` wrapper around React Query.
+3. **Slices stay single-purpose** — one piece of state, a small explicit reducer set, not a grab-bag "contracts" god-slice.
+4. **PR checklist, informally enforced:** does new server data go through a query hook (not `useEffect` + `fetch`)? does new client-only state go through a domain-named slice? does a new component belong in an existing domain folder? is there a loose `any` where a real response type belongs?
+
+## Key decisions & trade-offs
+
+**Redux Toolkit *and* React Query, not one or the other.** The alternative was React Query alone with Context for UI state — a common, often-fine choice. I rejected it because a lot of state here is genuinely cross-cutting and UI-only: a multi-modal stack that can have several modals open/minimized simultaneously (`ModalsManagerSlice`), upload status shared across a table and a global toast, sidebar/nav state. Threading that through per-feature Context providers was already causing re-render and prop-drilling pain in the inherited code. Redux's centralized store made that state reachable from anywhere without a provider per feature, while React Query already removed the need for "one Context per remote resource."
+
+**A shared `QueryClient` with a real `staleTime`, not the library default.** The default `staleTime: 0` refetches on every mount, which is wasteful against expensive contract/supplier aggregation endpoints and shows up as visible loading flicker on routine navigation. Setting 60s globally fixed that at the cost of needing an explicit `invalidateQueries` after mutations — which is also just a more correct mental model for "when does this data actually change."
+
+**Domain-first folders over type-first folders.** The alternative — flat `components/`, `hooks/`, `reducers/` folders — was already what parts of the inherited code looked like, and made "what touches contracts" a full-repo grep. It cost more upfront naming discipline but made review and onboarding faster: a PR touching `contracts/` rarely needs me to open `investigation/` to understand it.
+
+**One store instead of feature-sliced or per-route stores.** `configureStore` composes every slice at the root. The trade-off is a store file with ~90 imports — genuinely ugly to scroll — but the App Router has no clean per-route store lifecycle, and cross-route state (sidebar, active org, upload status) needs to survive navigation regardless.
+
+## Implementation highlights
+
+A single-purpose slice — the whole pattern in one file:
+
+```ts
+// src/store/slices/contracts/contractsRefreshSlice.ts
+const contractsRefreshSlice = createSlice({
+  name: "contractsRefresh",
+  initialState: { refreshContractsAt: null as number | null },
+  reducers: {
+    triggerContractsRefresh: (state) => { state.refreshContractsAt = Date.now(); },
+    clearContractsRefresh: (state) => { state.refreshContractsAt = null; },
+  },
+});
+```
+
+Any part of the tree can dispatch `triggerContractsRefresh()` after a mutation; a listener reacts to the timestamp changing. It's the pattern I asked reviewers to default to instead of a new Context or a callback threaded three components deep.
+
+A React Query hook wrapping domain logic, so components never see fetch details:
+
+```ts
+// src/hooks/contracts/useContracts.ts
+export const useContracts = (pageSize: number, searchTerm: string) => {
+  const isSearching = searchTerm.trim().length > 0;
+  return useInfiniteQuery({
+    queryKey: ["contracts", pageSize, searchTerm],
+    queryFn: ({ pageParam = 1 }) =>
+      isSearching
+        ? searchContracts(searchTerm, pageParam, pageSize)
+        : listContracts(pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
+  });
+};
+```
+
+The search/list branching lives here once instead of being reimplemented per screen.
+
+Shared cross-stage logic factored out after duplication showed up across a multi-step flow:
+
+```ts
+// src/components/projects/projectDetails/useAdvanceStage.ts
+export function useAdvanceStage(projectId: string, currentKey: StepKey) {
+  const queryClient = useQueryClient();
+  const advance = async () => {
+    if (!nextStep) return;
+    if (flow) {
+      await updateFlowStatus(projectId, flow, "completed");
+      await queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    }
+    router.push(`/projects/${projectId}?stage=${nextStep.key}`);
+  };
+  return { advance, isAdvancing, nextStep };
+}
+```
+
+The code is small, but the review conversation behind it mattered more: an earlier version had "advance to next step" living once in a shared breadcrumb component, which broke as soon as one stage needed different placement. Moving it to a per-stage hook any stage's own action bar can call was the actual fix.
+
+## Challenges
+
+**Reviewing 100% of two engineers' PRs without becoming the bottleneck.** I didn't fully solve this — some PRs sat waiting on me longer than I'd have liked, especially when several feature branches landed the same week before a client deadline. What helped was narrowing what I reviewed *hard* for: state placement and domain-folder placement got scrutiny every time; naming and formatting mostly didn't, since they're not what breaks in production. I also stopped blocking on style nits I'd have handled differently myself and left those as non-blocking comments instead.
+
+**Deadline pressure produced files I had to approve anyway.** A handful of components — a docx viewer, a supplier relationship-management view, a couple of the larger `helpers/*` files — are 1,000+ line single-file components written under tight client deadlines that I authored or approved because splitting them properly would have cost time we didn't have before go-live. I don't count those as a convention success; they're debt I tracked, and a few have since been the target of follow-up refactors I did merge — unifying separate Admin and Superadmin employee views into a single shared component was one such cleanup, done once pressure eased.
+
+**Two enterprise clients, different product entitlements, one codebase.** Orgs can be scoped to different product combinations (Contract Hub, Supplier Hub, or both), which meant UI gating — not just backend authorization — had to check org-level entitlements consistently across nav, modals, and user-management screens. A new screen would sometimes get built against the more full-featured client's expectations and forget the narrower one. I ended up asking for an explicit entitlement check on any new admin-facing UI, the same way I'd ask for a null check.
+
+## Impact
+
+Two enterprise clients run on this frontend in production, each with SSO-based onboarding, org-scoped data isolation, and independent product entitlements — from a codebase that started as a fork with no state-management convention at all. I set up and reviewed against a small, consistent set of conventions (domain-first structure, a hard client-state/server-state split) across effectively every PR from the two other engineers on the team, which is the reason the codebase reads consistently despite three people writing most of it under deadline pressure. I don't have hard before/after defect-rate numbers to cite here — [REVIEW: check if we tracked any bug/incident counts per client that are safe to share] — but qualitatively, the review discipline around state placement and entitlement checks caught real bugs before they reached either client, judging by how often a "where does this state belong" comment led to a changed diff rather than a shrug.
+
+The shared-component and shared-pattern layer also paid for itself in delivery speed, not just consistency. `confirmDelete`, the generic action-confirmation modal, is now reused across roughly 17 different delete flows (suppliers, contracts, audits, org users) instead of each screen growing its own; the base `button` component is used in around 19 places. When a class of React Query bugs showed up repeatedly — mismatched `setQueryData` keys, missed invalidations after mutation, inconsistent `staleTime`/`refetchOnWindowFocus` flags per hook — I pushed a pass to consolidate invalidation logic into the `helpers/<domain>/` layer and normalize the query defaults, plus add shared page-size constants, instead of leaving each new feature to reinvent it. The practical effect was that a new CRUD-shaped screen (a new delete flow, a new paginated list, a new confirm-and-refresh action) became a matter of wiring an existing modal and hook rather than writing one from scratch and re-litigating cache invalidation in review each time.
+
+## What I'd do differently
+
+The single `configureStore` with ~90 slices imported at the top of one file is what I'd revisit first — it works, but it's a bad first impression for a new engineer, and it makes "which slices are actually related" something you have to already know rather than something the file structure tells you. I'd also start tracking single-file-component debt earlier and more formally — a lightweight "split before next feature touches this" label — instead of letting it accumulate until a dedicated refactor pass became necessary. And I'd write the PR checklist down explicitly from day one instead of carrying it in my head and applying it through review comments; it would have made onboarding the second engineer faster, and made my own review criteria easier to challenge when I was wrong.
