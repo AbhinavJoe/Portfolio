@@ -235,7 +235,6 @@ const createJestConfig = nextJest({ dir: "./" });
 
 const customConfig: Config = {
   testEnvironment: "jest-environment-jsdom",
-  setupFilesAfterEach: [],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 };
 
@@ -1920,7 +1919,7 @@ git commit -m "feat: MDX renderers for code blocks and mermaid diagrams"
 ### Task 13: `/blog` list page + tag filter
 
 **Files:**
-- Create: `app/blog/page.tsx`, `components/blog/post-card.tsx`, `components/blog/tag-filter.tsx`
+- Create: `app/blog/page.tsx`, `app/blog/blog-list-client.tsx`, `components/blog/post-card.tsx`, `components/blog/tag-filter.tsx`
 - Test: `components/blog/__tests__/tag-filter.test.tsx`
 
 **Interfaces:**
@@ -2040,7 +2039,7 @@ export function PostCard({ post }: { post: BlogPost }) {
 }
 ```
 
-- [ ] **Step 6: Write `app/blog/page.tsx`**
+- [ ] **Step 6: Write `app/blog/blog-list-client.tsx`**
 
 ```tsx
 "use client";
@@ -2078,9 +2077,9 @@ export function BlogListClient({ posts, tags }: { posts: BlogPost[]; tags: strin
 }
 ```
 
-- [ ] **Step 7: Write the server entry `app/blog/page.tsx` wrapper**
+- [ ] **Step 7: Write the server entry `app/blog/page.tsx`**
 
-Rename the file above to `app/blog/blog-list-client.tsx`, and write `app/blog/page.tsx` as the actual route (a server component that reads posts at build time and hands them to the client component for interactivity):
+`app/blog/page.tsx` is the actual route — a server component that reads posts at build time and hands them to `BlogListClient` (Step 6) for interactivity:
 
 ```tsx
 // app/blog/page.tsx
