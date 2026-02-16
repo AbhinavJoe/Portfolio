@@ -15,7 +15,7 @@ describe("HomePage", () => {
     await act(async () => {
       await Promise.resolve();
     });
-    const ids = ["hero", "about", "skills", "experience", "projects", "contact"];
+    const ids = ["hero", "about", "skills", "experience", "projects", "blog-preview", "contact"];
     const renderedIds = Array.from(container.querySelectorAll("[id]"))
       .map((el) => el.id)
       .filter((id) => ids.includes(id));
