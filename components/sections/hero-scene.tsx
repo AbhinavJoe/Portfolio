@@ -1,20 +1,25 @@
 "use client";
 
 import { useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Sparkles, Icosahedron } from "@react-three/drei";
 import type { Mesh } from "three";
 
 function WireframeCore() {
   const meshRef = useRef<Mesh>(null);
   const scrollProgress = useRef(0);
+  // The canvas fills the hero section exactly, so its own rect is the range
+  // over which the scene is actually on screen. Measuring against that (rather
+  // than the whole document) means the tilt completes as the hero scrolls past
+  // the top of the viewport, instead of needing a full-page scroll to finish.
+  const canvasEl = useThree((state) => state.gl.domElement);
 
   useFrame((_, delta) => {
-    if (typeof window !== "undefined") {
-      const doc = document.documentElement;
-      const maxScroll = doc.scrollHeight - doc.clientHeight;
-      scrollProgress.current = maxScroll > 0 ? window.scrollY / maxScroll : 0;
-    }
+    const rect = canvasEl.getBoundingClientRect();
+    const total = rect.height || 1;
+    const scrolled = Math.min(Math.max(-rect.top, 0), total);
+    scrollProgress.current = scrolled / total;
+
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.15;
       meshRef.current.rotation.x = scrollProgress.current * Math.PI * 0.5;
