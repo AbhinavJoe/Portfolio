@@ -11,6 +11,15 @@ type Repo = {
   license: string;
 };
 
+type GitHubApiRepo = {
+  name: string;
+  html_url: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  license: { name: string } | null;
+};
+
 export function RepoList() {
   const [repos, setRepos] = useState<Repo[]>([]);
 
@@ -20,9 +29,9 @@ export function RepoList() {
     async function fetchRepos() {
       try {
         const response = await fetch("https://api.github.com/users/AbhinavJoe/repos");
-        const raw = await response.json();
+        const raw: GitHubApiRepo[] = await response.json();
         const formatted: Repo[] = raw
-          .map((repo: any) => ({
+          .map((repo) => ({
             name: repo.name,
             url: repo.html_url,
             description: repo.description,

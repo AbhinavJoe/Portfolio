@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { useCanRender3D } from "@/lib/hooks/use-can-render-3d";
 import { HeroSceneFallback } from "./hero-scene-fallback";
@@ -30,9 +31,9 @@ export function HeroSection() {
           <a href="#projects" className={buttonVariants({ variant: "primary", size: "md" })}>
             See projects
           </a>
-          <a href="/blog" className={buttonVariants({ variant: "outline", size: "md" })}>
+          <Link href="/blog" className={buttonVariants({ variant: "outline", size: "md" })}>
             Read the blog
-          </a>
+          </Link>
         </div>
       </div>
       <div className="aspect-square w-56 shrink-0 overflow-hidden rounded-full border-4 border-accent md:w-72">
