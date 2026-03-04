@@ -11,6 +11,7 @@
   --accent: #6d5bd0;
   --accent-strong: #5844c4;
   --teal: #0f9c82;
+  --focus-strong: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --accent: #8b7cf6;
     --accent-strong: #b7abff;
     --teal: #5fe3c4;
+    --focus-strong: #ffffff;
   }
 }
 
@@ -35,6 +37,7 @@
   --accent: #8b7cf6;
   --accent-strong: #b7abff;
   --teal: #5fe3c4;
+  --focus-strong: #ffffff;
 }
 
 body {
