@@ -10,7 +10,10 @@
   --text-dim: #565b6e;
   --accent: #6d5bd0;
   --accent-strong: #5844c4;
-  --teal: #0f9c82;
+  /* #0a7d68 clears WCAG AA (4.74:1) against --bg #f7f7fb; the original
+     #0f9c82 only measured 3.22:1. */
+  --teal: #0a7d68;
+  --accent-foreground: #ffffff;
   --focus-strong: #000000;
 }
 
@@ -24,6 +27,9 @@
     --accent: #8b7cf6;
     --accent-strong: #b7abff;
     --teal: #5fe3c4;
+    /* White text on --accent only measures 3.33:1 here; the dark near-black
+       token below clears AA (6.3:1) against the lighter dark-mode accent. */
+    --accent-foreground: #0a0b10;
     --focus-strong: #ffffff;
   }
 }
@@ -37,7 +43,12 @@
   --accent: #8b7cf6;
   --accent-strong: #b7abff;
   --teal: #5fe3c4;
+  --accent-foreground: #0a0b10;
   --focus-strong: #ffffff;
+}
+
+html {
+  scroll-padding-top: 5rem;
 }
 
 body {
