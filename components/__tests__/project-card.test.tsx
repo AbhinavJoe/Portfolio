@@ -25,4 +25,10 @@ describe("ProjectCard", () => {
     fireEvent.click(screen.getByRole("button", { name: /back to details/i }));
     expect(screen.getByRole("button", { name: /play demo/i })).toBeInTheDocument();
   });
+
+  it("does not render a 'Play Demo' button when the project has no real demo", () => {
+    render(<ProjectCard project={{ ...project, hasDemo: false }} />);
+    expect(screen.queryByRole("button", { name: /play demo/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
+  });
 });
