@@ -25,5 +25,19 @@ export const mdxComponents: MDXComponents = {
   h3: (props: React.ComponentPropsWithoutRef<"h3">) => <h3 className="mt-8 mb-3 text-xl font-semibold text-text" {...props} />,
   p: (props: React.ComponentPropsWithoutRef<"p">) => <p className="mb-4 leading-relaxed text-text-dim" {...props} />,
   ul: (props: React.ComponentPropsWithoutRef<"ul">) => <ul className="mb-4 list-disc pl-6 text-text-dim" {...props} />,
+  ol: (props: React.ComponentPropsWithoutRef<"ol">) => <ol className="mb-4 list-decimal pl-6 text-text-dim" {...props} />,
+  li: (props: React.ComponentPropsWithoutRef<"li">) => <li className="mb-1 leading-relaxed" {...props} />,
+  blockquote: (props: React.ComponentPropsWithoutRef<"blockquote">) => (
+    <blockquote className="mb-4 border-l-2 border-border pl-4 italic text-text-dim" {...props} />
+  ),
+  code: (props: React.ComponentPropsWithoutRef<"code">) => {
+    // Fenced code blocks compile to <pre><code class="language-x">…</code></pre>
+    // and are already styled by the `pre` mapping above — only style bare
+    // inline `code` spans (no language- className) with the pill treatment,
+    // so block code doesn't get double-styled.
+    const isFencedBlock = typeof props.className === "string" && props.className.startsWith("language-");
+    if (isFencedBlock) return <code {...props} />;
+    return <code className="rounded bg-bg-raised px-1.5 py-0.5 font-mono text-sm text-text" {...props} />;
+  },
   a: (props: React.ComponentPropsWithoutRef<"a">) => <a className="text-accent-strong underline underline-offset-2" {...props} />,
 };
