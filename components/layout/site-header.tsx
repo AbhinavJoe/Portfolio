@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const NAV_LINKS = [
   { href: "/#about", label: "About" },
@@ -14,15 +15,18 @@ export function SiteHeader() {
         <Link href="/" className="font-mono text-sm font-semibold text-text">
           abhinav joshi
         </Link>
-        <ul className="flex gap-6 text-sm text-text-dim">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href} className="transition-colors hover:text-accent-strong">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-6">
+          <ul className="flex gap-6 text-sm text-text-dim">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="transition-colors hover:text-accent-strong">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );
