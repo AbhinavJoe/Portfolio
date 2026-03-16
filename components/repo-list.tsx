@@ -65,6 +65,9 @@ export function RepoList() {
           >
             <h3 className="font-mono text-sm font-semibold text-text">{repo.name}</h3>
             <p className="text-xs text-text-dim">{repo.description ?? "No description"}</p>
+            <p className="mt-1 text-xs text-text-dim">
+              Updated {new Date(repo.updatedAt).toLocaleDateString()} · {repo.license}
+            </p>
           </a>
         ))}
       </div>
