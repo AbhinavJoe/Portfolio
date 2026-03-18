@@ -3,7 +3,9 @@ import { Reveal } from "@/components/layout/reveal";
 export function AboutSection() {
   return (
     <section id="about" className="mx-auto max-w-3xl px-6 py-20">
-      <h2 className="mb-6 font-mono text-sm uppercase tracking-wide text-teal">About</h2>
+      <h2 data-trace-group="about" className="mb-6 font-mono text-sm uppercase tracking-wide text-teal">
+        About
+      </h2>
       <Reveal>
         <p className="text-lg leading-relaxed text-text-dim">
           I&apos;m a backend-leaning software engineer who ends up owning whatever&apos;s load-bearing —

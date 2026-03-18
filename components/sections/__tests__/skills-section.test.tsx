@@ -8,4 +8,11 @@ describe("SkillsSection", () => {
     expect(screen.getByText("Infra/DevOps")).toBeInTheDocument();
     expect(screen.getByText(/Keycloak/)).toBeInTheDocument();
   });
+
+  it("tags every column header with the same scroll-trace group, so they underline together", () => {
+    render(<SkillsSection />);
+    const headers = screen.getAllByRole("heading", { level: 3 });
+    expect(headers.length).toBeGreaterThanOrEqual(4);
+    headers.forEach((header) => expect(header).toHaveAttribute("data-trace-group", "skills"));
+  });
 });

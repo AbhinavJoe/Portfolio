@@ -13,6 +13,8 @@ export function Socials() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="LinkedIn"
+        data-trace-group="socials"
+        data-trace-shape="circle"
         className="text-text hover:text-accent-strong"
       >
         <FaLinkedin size={22} />
@@ -22,6 +24,8 @@ export function Socials() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="GitHub"
+        data-trace-group="socials"
+        data-trace-shape="circle"
         className="text-text hover:text-accent-strong"
       >
         <FaGithub size={22} />
