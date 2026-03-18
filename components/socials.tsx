@@ -1,7 +1,7 @@
 // Note: brief specified lucide-react's Github/Linkedin icons, but
-// lucide-react@1.33.0 (the installed version) does not export brand
-// icons. Using react-icons/fa6 instead, which is already a project
-// dependency and matches the icons used by the original component.
+// lucide-react doesn't export brand icons. Using react-icons/fa6 instead,
+// which is already a project dependency and matches the icons used by the
+// original component.
 import { FaGithub, FaLinkedin } from "react-icons/fa6";
 
 export function Socials() {
