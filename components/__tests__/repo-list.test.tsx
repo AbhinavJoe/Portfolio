@@ -33,4 +33,10 @@ describe("RepoList", () => {
     const names = screen.getAllByRole("heading").map((el) => el.textContent);
     expect(names).toEqual(["a-repo", "z-repo"]);
   });
+
+  it("opts its own scroll container out of the page's global Lenis smooth-scroll", async () => {
+    const { container } = render(<RepoList />);
+    await waitFor(() => expect(screen.getByText("a-repo")).toBeInTheDocument());
+    expect(container.querySelector(".overflow-y-auto")).toHaveAttribute("data-lenis-prevent");
+  });
 });

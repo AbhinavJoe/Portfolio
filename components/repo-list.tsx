@@ -53,7 +53,15 @@ export function RepoList() {
   }, []);
 
   return (
-    <div className="h-full w-full overflow-y-auto rounded-xl border border-border">
+    // Lenis (the page's global smooth-scroll provider) hijacks wheel input
+    // everywhere by default and has no way to know this is its own
+    // independently-scrollable container — data-lenis-prevent tells it to
+    // leave this element's scrolling (wheel and scrollbar drag alike) to
+    // the browser instead of routing it into the page's own scroll.
+    <div
+      data-lenis-prevent
+      className="h-full w-full overflow-y-auto rounded-xl border border-border"
+    >
       <div className="flex flex-col gap-2 p-3">
         {repos.map((repo) => (
           <a
