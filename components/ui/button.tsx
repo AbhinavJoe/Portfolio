@@ -6,8 +6,15 @@ export const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
+      // Outline-first language throughout — no solid fills except the
+      // subtle hover tint, matching the site's restrained editorial style.
       variant: {
-        primary: "bg-accent text-accent-foreground hover:bg-accent-strong focus-visible:ring-focus-strong",
+        // Tailwind's /opacity modifier can't decompose a CSS-variable color
+        // into channels, so the hover tint uses color-mix() directly — same
+        // approach the rest of the codebase uses for translucent tokens
+        // (e.g. --border's baked-in alpha).
+        primary:
+          "border border-accent text-accent-strong hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] focus-visible:ring-accent",
         outline:
           "border border-border text-text hover:border-accent hover:text-accent-strong focus-visible:ring-accent",
         ghost: "text-text-dim hover:text-text focus-visible:ring-accent",

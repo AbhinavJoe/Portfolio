@@ -8,8 +8,14 @@
   --border: #e3e3ec;
   --text: #14151c;
   --text-dim: #565b6e;
-  --accent: #6d5bd0;
-  --accent-strong: #5844c4;
+  /* Blue reads as trust/competence/calm reliability across color-psychology
+     research and is the default choice of brands (LinkedIn, IBM, most
+     fintech) that want to look like a safe bet to a prospect — swapped in
+     from the previous violet for exactly that reason. #2954c6 clears WCAG
+     AA for white text (6.6:1) against itself as a fill. */
+  --accent: #2954c6;
+  /* #1f3f9e is the text-safe variant: 8.7:1 against --bg #f7f7fb. */
+  --accent-strong: #1f3f9e;
   /* #0a7d68 clears WCAG AA (4.74:1) against --bg #f7f7fb; the original
      #0f9c82 only measured 3.22:1. */
   --teal: #0a7d68;
@@ -24,11 +30,11 @@
     --border: #23283380;
     --text: #e7e9f0;
     --text-dim: #9aa1b5;
-    --accent: #8b7cf6;
-    --accent-strong: #b7abff;
+    /* #5b8def is the dark-mode fill; dark near-black text on it clears AA
+       (6.3:1). #8fb4ff is the text-safe variant: 9.8:1 against --bg. */
+    --accent: #5b8def;
+    --accent-strong: #8fb4ff;
     --teal: #5fe3c4;
-    /* White text on --accent only measures 3.33:1 here; the dark near-black
-       token below clears AA (6.3:1) against the lighter dark-mode accent. */
     --accent-foreground: #0a0b10;
     --focus-strong: #ffffff;
   }
@@ -40,8 +46,8 @@
   --border: #23283380;
   --text: #e7e9f0;
   --text-dim: #9aa1b5;
-  --accent: #8b7cf6;
-  --accent-strong: #b7abff;
+  --accent: #5b8def;
+  --accent-strong: #8fb4ff;
   --teal: #5fe3c4;
   --accent-foreground: #0a0b10;
   --focus-strong: #ffffff;
