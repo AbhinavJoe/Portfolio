@@ -17,34 +17,50 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative mx-auto flex max-w-5xl flex-col-reverse items-center gap-10 overflow-hidden px-6 py-24 md:flex-row md:py-32"
+      className="relative mx-auto grid max-w-5xl grid-cols-1 items-end gap-10 overflow-hidden px-6 pb-16 pt-16 md:grid-cols-[1.35fr_0.8fr] md:pb-20 md:pt-24"
     >
       {canRender3D ? <HeroScene /> : <HeroSceneFallback />}
-      <div className="flex-1 space-y-6 text-center md:text-left">
-        <p data-trace-group="hero-role" className="font-mono text-sm uppercase tracking-wide text-teal">
+
+      <div>
+        <p
+          data-trace-group="hero-role"
+          className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-strong)_40%,transparent)] px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-accent-strong"
+        >
+          <span aria-hidden className="h-[5px] w-[5px] rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
           Software Engineer
         </p>
-        <h1 className="text-4xl font-bold text-text md:text-6xl">Abhinav Joshi</h1>
-        <p className="max-w-prose text-lg text-text-dim">
-          I build backend systems, auth, and data pipelines — currently at Panaroma Intelligence
-          Solutions, shipping multi-tenant infrastructure and LLM-backed products in production.
+        <h1 className="mt-6 text-balance font-heading text-5xl font-semibold leading-[0.98] tracking-tight text-text sm:text-6xl md:text-7xl">
+          Abhinav Joshi
+        </h1>
+        <p className="mt-5 max-w-[30ch] text-pretty text-lg text-text-dim sm:text-xl">
+          I build the load-bearing parts — auth, task queues, the service three other services
+          quietly depend on.
         </p>
-        <div className="flex justify-center gap-4 md:justify-start">
+        <div className="mt-8 flex flex-wrap gap-3">
           <a href="#projects" className={buttonVariants({ variant: "primary", size: "md" })}>
-            See projects
+            See the work
           </a>
           <Link href="/blog" className={buttonVariants({ variant: "outline", size: "md" })}>
-            Read the blog
+            Read the writing
           </Link>
         </div>
       </div>
-      <div className="aspect-square w-56 shrink-0 overflow-hidden rounded-full border-4 border-accent md:w-72">
+
+      <div className="relative">
+        <div
+          aria-hidden
+          className="absolute -inset-x-[8%] -inset-y-[10%] -z-10 blur-2xl"
+          style={{
+            background:
+              "radial-gradient(60% 55% at 50% 40%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 72%)",
+          }}
+        />
         <Image
           src="/images/profile.jpg"
           alt="Abhinav Joshi"
           width={480}
-          height={480}
-          className="h-full w-full object-cover object-top"
+          height={600}
+          className="aspect-[4/5] w-full rounded-lg object-cover object-top grayscale-[35%] contrast-[1.05]"
           priority
         />
       </div>

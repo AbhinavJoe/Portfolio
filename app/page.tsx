@@ -1,6 +1,6 @@
 import { HeroSection } from "@/components/sections/hero-section";
+import { StatsRow } from "@/components/sections/stats-row";
 import { AboutSection } from "@/components/sections/about-section";
-import { SkillsSection } from "@/components/sections/skills-section";
 import { ExperienceSection } from "@/components/sections/experience-section";
 import { ProjectsSection } from "@/components/sections/projects-section";
 import { BlogPreviewSection } from "@/components/sections/blog-preview-section";
@@ -13,8 +13,8 @@ export default function HomePage() {
   return (
     <main>
       <HeroSection />
+      <StatsRow />
       <AboutSection />
-      <SkillsSection />
       <ExperienceSection />
       <ProjectsSection />
       <BlogPreviewSection posts={posts} />
