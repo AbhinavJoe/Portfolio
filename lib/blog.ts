@@ -48,3 +48,55 @@ export function getAllTags(): string[] {
   const tags = getAllPosts().flatMap((post) => post.tags);
   return Array.from(new Set(tags));
 }
+
+export type Heading = {
+  depth: 2 | 3;
+  /** Plain text, inline markdown emphasis/code markers stripped — matches
+   * what the rendered heading's text content looks like, so mdx-components
+   * can key off the same string. */
+  text: string;
+  slug: string;
+  /** Sequential "01", "02"... for h2s only; h3s nest under their h2 and
+   * don't get their own top-level number. */
+  num?: string;
+};
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/**
+ * Pulls h2/h3 headings out of raw MDX source via a line-level regex, ahead
+ * of MDX rendering — good enough for this content (plain-text headings, no
+ * links or line breaks inside them) and lets the post page build a table of
+ * contents and per-heading numbering without a full markdown AST pass.
+ */
+export function extractHeadings(markdown: string): Heading[] {
+  const headings: Heading[] = [];
+  const slugCounts = new Map<string, number>();
+  let h2Count = 0;
+
+  for (const line of markdown.split("\n")) {
+    const match = /^(#{2,3})\s+(.+?)\s*$/.exec(line);
+    if (!match) continue;
+
+    const depth = match[1].length as 2 | 3;
+    // Strip inline emphasis/code markers so this matches the plain text
+    // MDX actually renders (e.g. "**without**" -> "without").
+    const text = match[2].replace(/[*_`]/g, "");
+
+    let slug = slugify(text);
+    const count = slugCounts.get(slug) ?? 0;
+    slugCounts.set(slug, count + 1);
+    if (count > 0) slug = `${slug}-${count}`;
+
+    if (depth === 2) h2Count += 1;
+    headings.push({ depth, text, slug, num: depth === 2 ? String(h2Count).padStart(2, "0") : undefined });
+  }
+
+  return headings;
+}
