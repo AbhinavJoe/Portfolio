@@ -6,7 +6,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa6";
 
 export function Socials() {
   return (
-    <div className="flex items-center justify-center gap-4 md:justify-start">
+    <div className="flex items-center justify-center gap-5 md:justify-start">
       <span className="text-sm text-text-dim">Find me on:</span>
       <a
         href="https://www.linkedin.com/in/abhinavjoe/"
