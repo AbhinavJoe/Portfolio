@@ -44,3 +44,20 @@ if (typeof global !== "undefined") {
   (global as unknown as { IntersectionObserver: unknown }).IntersectionObserver =
     MockIntersectionObserver;
 }
+
+// jsdom does not implement ResizeObserver, which ProjectCard relies on to
+// detect whether its stack badges wrapped onto a second line. Stub it out
+// the same way as IntersectionObserver above so components using it can
+// mount in tests.
+class MockResizeObserver implements ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (typeof window !== "undefined") {
+  (window as unknown as { ResizeObserver: unknown }).ResizeObserver = MockResizeObserver;
+}
+if (typeof global !== "undefined") {
+  (global as unknown as { ResizeObserver: unknown }).ResizeObserver = MockResizeObserver;
+}
