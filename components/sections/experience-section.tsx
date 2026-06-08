@@ -46,9 +46,9 @@ export function ExperienceSection() {
       ref={sectionRef}
       className="mx-auto grid max-w-5xl grid-cols-1 gap-10 px-6 py-20 md:grid-cols-[148px_1fr] md:py-28"
     >
-      <div className="pt-1.5 font-mono text-[11px] uppercase tracking-wide text-text-dim">
-        02 / Experience
-      </div>
+      <h2 className="pt-1.5 font-mono text-[11px] uppercase tracking-wide text-text-dim">
+        <span aria-hidden="true">02 / </span>Experience
+      </h2>
       <div className="flex flex-col gap-12">
         {experience.map((entry, index) => {
           const isOpen = !!expanded[index];

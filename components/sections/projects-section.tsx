@@ -16,12 +16,12 @@ export function ProjectsSection() {
       id="projects"
       className="mx-auto grid max-w-5xl grid-cols-1 gap-10 px-6 py-20 md:grid-cols-[148px_1fr] md:py-28"
     >
-      <div
+      <h2
         data-trace-group="projects"
         className="pt-1.5 font-mono text-[11px] uppercase tracking-wide text-text-dim"
       >
-        03 / Projects
-      </div>
+        <span aria-hidden="true">03 / </span>Projects
+      </h2>
       <Reveal>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {projects.map((project) => (

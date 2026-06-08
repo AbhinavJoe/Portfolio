@@ -5,12 +5,12 @@ export function AboutSection() {
   return (
     <section id="about" className="mx-auto max-w-5xl px-6 py-20 md:py-28">
       <div className="grid grid-cols-1 gap-10 md:grid-cols-[148px_1fr]">
-        <div
+        <h2
           data-trace-group="about"
           className="pt-1.5 font-mono text-[11px] uppercase tracking-wide text-text-dim"
         >
-          01 / About
-        </div>
+          <span aria-hidden="true">01 / </span>About
+        </h2>
         <Reveal>
           <div className="grid grid-cols-1 gap-12 md:grid-cols-[1fr_0.78fr]">
             <div>
