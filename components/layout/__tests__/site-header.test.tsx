@@ -4,7 +4,7 @@ import { SiteHeader } from "../site-header";
 describe("SiteHeader", () => {
   it("links to the blog", () => {
     render(<SiteHeader />);
-    expect(screen.getByRole("link", { name: /blog/i })).toHaveAttribute("href", "/blog");
+    expect(screen.getByRole("link", { name: /writing/i })).toHaveAttribute("href", "/blog");
   });
 
   it("links to every home section anchor", () => {
