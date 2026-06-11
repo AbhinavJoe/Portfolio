@@ -43,20 +43,32 @@ function getRailX(): number {
 // in the upper third of the screen) on any screen size.
 const SETTLE_OFFSET = 260;
 
-// The marker only morphs during the final stretch of scroll before each
-// stage's arrival point, so it spends the rest of the scroll distance at
-// rest on the current stage rather than perpetually catching up — most of
-// the gap between two stages, so there's real time to stop and read before
-// it fires away, in both scroll directions (this is purely a function of
-// scrollY, not a one-way timer). The transition's length is a fraction of
-// the actual scroll gap between two stages (capped at MAX_TRANSITION_LENGTH)
-// rather than one fixed pixel value — a flat value either felt like a
-// rushed snap on generously-spaced stages or ate the entire gap (leaving no
-// rest at all) on closely-spaced ones. Nearby stages (e.g. the Experience
-// heading and the Panaroma heading right under it) still just get a
-// shorter, faster morph, proportional to their small gap.
-const TRANSITION_FRACTION = 0.45;
-const MAX_TRANSITION_LENGTH = 700;
+// The marker morphs during the final stretch of scroll before each stage's
+// arrival point, so it also spends part of the scroll distance at rest on
+// the current stage — time to stop and read before it fires away, in both
+// scroll directions (this is purely a function of the smoothed scrollY, not
+// a one-way timer). The transition's length is a fraction of the actual
+// scroll gap between two stages (capped at MAX_TRANSITION_LENGTH) rather
+// than one fixed pixel value — a flat value either felt like a rushed snap
+// on generously-spaced stages or ate the entire gap (leaving no rest at
+// all) on closely-spaced ones. Nearby stages (e.g. the Experience heading
+// and the Panaroma heading right under it) still just get a shorter,
+// faster morph, proportional to their small gap.
+const TRANSITION_FRACTION = 0.6;
+const MAX_TRANSITION_LENGTH = 1000;
+
+// How quickly the rendered marker chases the live scroll position, as an
+// exponential time constant in ms: each frame it closes a fraction of the
+// remaining distance to window.scrollY, scaled by real elapsed time so the
+// feel is identical at any refresh rate. This bounds the marker's motion in
+// TIME (~95% caught up ~3τ ≈ 420ms after any scroll input stops) rather
+// than in scroll distance — driven straight off raw scrollY, a fast wheel
+// or Lenis flick used to sweep through an entire transition window within a
+// couple of frames, playing the whole retract-travel-extend morph as an
+// instant snap no matter how the window constants were tuned. Slow scrolling
+// still reads as locked to the page (lag ≈ velocity × τ, e.g. ~40px at
+// 300px/s, shrinking back to zero once scrolling stops).
+const SMOOTHING_TAU_MS = 140;
 
 // document.documentElement.scrollHeight/window.innerHeight are rounded to
 // whole CSS pixels, but the browser's actual native scroll ceiling can sit a
@@ -336,11 +348,12 @@ function secondaryTransitShape(
  * paint. Elements sharing a group value become one stage with that many
  * simultaneous markers (e.g. all four Skills column headers).
  *
- * Position is driven directly off `window.scrollY` against a precomputed,
- * strictly-increasing "arrival" scroll position per stage — not per-stage
- * ScrollTrigger windows sized off the viewport, which overlap (and can
- * already be mid-transition at the very top of the page) whenever two
- * stages sit closer together than a viewport height apart.
+ * Position is driven off a temporally smoothed chase toward `window.scrollY`
+ * (see SMOOTHING_TAU_MS) against a precomputed, strictly-increasing
+ * "arrival" scroll position per stage — not per-stage ScrollTrigger windows
+ * sized off the viewport, which overlap (and can already be mid-transition
+ * at the very top of the page) whenever two stages sit closer together than
+ * a viewport height apart.
  */
 export function ScrollTraceIndicator() {
   const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -432,7 +445,7 @@ export function ScrollTraceIndicator() {
       }
     }
 
-    function render() {
+    function render(scrollY: number) {
       if (stageShapes.length === 0) {
         // No targets on this page (e.g. /blog, /blog/[slug]) — hide any
         // markers left over from a previous page rather than leave them
@@ -441,7 +454,6 @@ export function ScrollTraceIndicator() {
         markers.forEach((marker) => gsap.set(marker, { scaleX: 0, scaleY: 0 }));
         return;
       }
-      const scrollY = window.scrollY;
       const lastIndex = arrivalScrollY.length - 1;
 
       if (prefersReducedMotion) {
@@ -518,11 +530,34 @@ export function ScrollTraceIndicator() {
     // to run continuously — this sidesteps needing to know about every
     // possible cause of a stale rect, instead of chasing each one as a
     // separate listener.
+    //
+    // The scroll value handed to render() chases the real one instead of
+    // tracking it 1:1: each frame it exponentially closes part of the gap to
+    // window.scrollY over the elapsed time (frame-rate-independent — same
+    // feel at any refresh rate). Everything downstream stays a pure function
+    // of that one value, so the entire existing phase/morph math is
+    // untouched; it just experiences a smoothed virtual scroll. The chase
+    // converges to exactly where a raw read would put the marker, so resting
+    // positions are unchanged. Reduced motion skips the chase: the marker
+    // should sit exactly where the page is, instantly.
+    let smoothedScrollY = window.scrollY;
+    let lastFrameTimeMs: number | null = null;
+
     let rafId: number;
-    function loop() {
+    function loop(nowMs: number) {
       measure();
       updateRail(stageShapes.length > 0);
-      render();
+      const rawScrollY = window.scrollY;
+      if (!prefersReducedMotion && lastFrameTimeMs !== null) {
+        const dtMs = Math.max(nowMs - lastFrameTimeMs, 0);
+        smoothedScrollY += (rawScrollY - smoothedScrollY) * (1 - Math.exp(-dtMs / SMOOTHING_TAU_MS));
+      } else {
+        // First frame of an effect run (or reduced motion): start from where
+        // the page actually is rather than gliding in from a stale value.
+        smoothedScrollY = rawScrollY;
+      }
+      lastFrameTimeMs = nowMs;
+      render(prefersReducedMotion ? rawScrollY : smoothedScrollY);
       rafId = requestAnimationFrame(loop);
     }
     rafId = requestAnimationFrame(loop);
