@@ -18,8 +18,19 @@ export function ContactSection() {
         <Socials />
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-12 md:grid-cols-2">
-        <ContactForm />
+      <div className="mt-14 grid grid-cols-1 gap-12 md:grid-cols-2 items-center">
+        <div className="flex flex-col items-center">
+          <img
+            src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-monitor.gif"
+            alt="Lain, Serial Experiments Lain, watching a terminal glow"
+            className="h-80 w-auto dark:hidden"
+          />
+          <img
+            src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-desk.gif"
+            alt="Lain, Serial Experiments Lain, at her desk at night"
+            className="h-80 w-auto hidden dark:block"
+          />
+        </div>
         <div className="flex flex-col gap-4">
           <h3 className="font-mono text-[11px] uppercase tracking-wide text-text-dim">
             GitHub Repositories
