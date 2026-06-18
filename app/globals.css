@@ -2,63 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens are space-separated RGB channels so Tailwind's /opacity
+   modifier works on every colour (bg-surface/30, border-accent/40, …).
+   Monochrome on purpose: hierarchy comes from fg → muted → faint, and the
+   only chroma on the page is the live status dot and the project status pill. */
 :root {
-  --bg: #f7f7fb;
-  --bg-raised: #ffffff;
-  --border: #e3e3ec;
-  --text: #14151c;
-  --text-dim: #565b6e;
-  /* Blue reads as trust/competence/calm reliability across color-psychology
-     research and is the default choice of brands (LinkedIn, IBM, most
-     fintech) that want to look like a safe bet to a prospect — swapped in
-     from the previous violet for exactly that reason. #2954c6 clears WCAG
-     AA for white text (6.6:1) against itself as a fill. */
-  --accent: #2954c6;
-  /* #1f3f9e is the text-safe variant: 8.7:1 against --bg #f7f7fb. */
-  --accent-strong: #1f3f9e;
-  /* #0a7d68 clears WCAG AA (4.74:1) against --bg #f7f7fb; the original
-     #0f9c82 only measured 3.22:1. */
-  --teal: #0a7d68;
-  --accent-foreground: #ffffff;
-  --focus-strong: #000000;
+  --bg: 250 250 249;
+  --surface: 255 255 255;
+  --border: 228 228 231;
+  --fg: 24 24 27;
+  --muted: 82 82 91;
+  --faint: 113 113 122;
+  --accent: 0 0 0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0b10;
-    --bg-raised: #12141c;
-    --border: #23283380;
-    --text: #e7e9f0;
-    --text-dim: #9aa1b5;
-    /* #5b8def is the dark-mode fill; dark near-black text on it clears AA
-       (6.3:1). #8fb4ff is the text-safe variant: 9.8:1 against --bg. */
-    --accent: #5b8def;
-    --accent-strong: #8fb4ff;
-    --teal: #5fe3c4;
-    --accent-foreground: #0a0b10;
-    --focus-strong: #ffffff;
+    --bg: 0 0 0;
+    --surface: 15 15 15;
+    --border: 39 39 45;
+    --fg: 237 237 240;
+    --muted: 161 161 170;
+    --faint: 140 140 150;
+    --accent: 255 255 255;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0a0b10;
-  --bg-raised: #12141c;
-  --border: #23283380;
-  --text: #e7e9f0;
-  --text-dim: #9aa1b5;
-  --accent: #5b8def;
-  --accent-strong: #8fb4ff;
-  --teal: #5fe3c4;
-  --accent-foreground: #0a0b10;
-  --focus-strong: #ffffff;
+  --bg: 0 0 0;
+  --surface: 15 15 15;
+  --border: 39 39 45;
+  --fg: 237 237 240;
+  --muted: 161 161 170;
+  --faint: 140 140 150;
+  --accent: 255 255 255;
 }
 
 html {
-  scroll-padding-top: 5rem;
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans, "IBM Plex Sans"), system-ui, sans-serif;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.4s, color 0.4s;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.25);
+}
+
+/* Faint blueprint grid that fades out toward the bottom of the hero. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(var(--border) / 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--border) / 0.4) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(80% 60% at 50% 0, #000 40%, transparent 100%);
+  mask-image: radial-gradient(80% 60% at 50% 0, #000 40%, transparent 100%);
+}
+
+/* Round social tiles the scroll-trace marker docks behind. The indicator sets
+   --trace-cover (0–1) on a tile as the marker settles onto it: the tile's own
+   fill and border fade out so the solid marker shows through edge to edge,
+   and the icon flips to the page-background colour so it stays legible on
+   the (white-on-dark / black-on-light) disc. Hover only changes --tile-fg, so
+   it composes with the cover blend instead of fighting it. */
+.trace-tile {
+  --trace-cover: 0;
+  --tile-fg: var(--muted);
+  color: color-mix(in srgb, rgb(var(--bg)) calc(var(--trace-cover) * 100%), rgb(var(--tile-fg)));
+  background-color: rgb(var(--surface) / calc(0.3 * (1 - var(--trace-cover))));
+  border-color: rgb(var(--border) / calc(1 - var(--trace-cover)));
+}
+.trace-tile:hover {
+  --tile-fg: var(--fg);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(2000%);
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-blink,
+  .animate-scanline {
+    animation: none;
+  }
 }
