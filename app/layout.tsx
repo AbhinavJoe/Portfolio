@@ -1,30 +1,15 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono, Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollTraceIndicator } from "@/components/scroll-trace-indicator";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sans",
-});
+// Inter for everything readable, JetBrains Mono for labels, dates and chips.
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
-});
-
-// Display face for headings — bigger, tighter editorial sizing than body
-// copy calls for. Body text and mono labels keep their existing faces.
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-heading",
-});
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Abhinav Joshi",
@@ -35,10 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${plexSans.variable} ${plexMono.variable} ${inter.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
-      <body>
+      <body className="font-sans">
         <ThemeProvider>
           <SmoothScrollProvider>
             <SiteHeader />

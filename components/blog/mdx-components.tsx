@@ -76,7 +76,7 @@ export function createMdxComponents(headings: Heading[]): MDXComponents {
     li: (props: React.ComponentPropsWithoutRef<"li">) => <li className="mb-1 leading-relaxed" {...props} />,
     blockquote: (props: React.ComponentPropsWithoutRef<"blockquote">) => (
       <blockquote
-        className="mb-4 border-l-2 border-accent-strong bg-[color-mix(in_srgb,var(--accent)_7%,transparent)] py-2 pl-4 text-text-dim"
+        className="mb-4 border-l-2 border-accent-strong bg-accent/[0.07] py-2 pl-4 text-text-dim"
         {...props}
       />
     ),
