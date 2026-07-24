@@ -7,6 +7,10 @@ export type Project = {
   link: string;
   /** Set to false when no real demo recording exists for this project — hides the "Play Demo" affordance instead of borrowing another project's video. Defaults to true when omitted. */
   hasDemo?: boolean;
+  /** Optional project year shown on the card. */
+  year?: string;
+  /** Optional status tag shown on the card. */
+  status?: "Completed" | "In Progress";
 };
 
 export const projects: Project[] = [
@@ -17,6 +21,8 @@ export const projects: Project[] = [
     video: "/samples/KubeCentrixDemo.mp4",
     thumbnail: "/thumbnail/KubeCentrixDemo.png",
     link: "https://github.com/AbhinavJoe/KubeCentrix",
+    year: "2024",
+    status: "Completed",
   },
   {
     title: "Reactflow-X-DAG",
@@ -25,6 +31,8 @@ export const projects: Project[] = [
     video: "/samples/Reactflow.mp4",
     thumbnail: "/thumbnail/Reactflow.png",
     link: "https://github.com/AbhinavJoe/Reactflow-X-DAG",
+    year: "2025",
+    status: "Completed",
   },
   {
     title: "FinCentrix: AI Powered Financial Advisory",
@@ -33,6 +41,8 @@ export const projects: Project[] = [
     video: "/samples/FinCentrix.mp4",
     thumbnail: "/thumbnail/FinCentrix.png",
     link: "https://github.com/AbhinavJoe/FinCentrix-A-User-Centric-AI-Financial-Advisor",
+    year: "2024",
+    status: "Completed",
   },
   {
     title: "Google Search Automation",
@@ -41,6 +51,8 @@ export const projects: Project[] = [
     video: "/samples/Google.mp4",
     thumbnail: "/thumbnail/Google.png",
     link: "https://github.com/AbhinavJoe/Google-Search-Automation",
+    year: "2023",
+    status: "Completed",
   },
   {
     title: "RAG-X-Langchain-JS",
@@ -49,5 +61,7 @@ export const projects: Project[] = [
     video: "/samples/RAGXLangchain.mp4",
     thumbnail: "/thumbnail/RAGXLangchain.png",
     link: "https://github.com/AbhinavJoe/RAG-X-Langchain-JS",
+    year: "2024",
+    status: "Completed",
   },
 ];
