@@ -14,11 +14,16 @@ describe("Socials", () => {
     );
   });
 
-  it("tags both icons as a simultaneous scroll-trace circle waypoint", () => {
-    render(<Socials />);
-    for (const link of [screen.getByLabelText("LinkedIn"), screen.getByLabelText("GitHub")]) {
+  it("tags every icon as a simultaneous scroll-trace circle waypoint when traced", () => {
+    render(<Socials traced />);
+    for (const link of [screen.getByLabelText("LinkedIn"), screen.getByLabelText("GitHub"), screen.getByLabelText("Writing")]) {
       expect(link).toHaveAttribute("data-trace-group", "socials");
       expect(link).toHaveAttribute("data-trace-shape", "circle");
     }
+  });
+
+  it("leaves the icons out of the scroll trace by default", () => {
+    render(<Socials />);
+    expect(screen.getByLabelText("GitHub")).not.toHaveAttribute("data-trace-group");
   });
 });
