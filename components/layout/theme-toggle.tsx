@@ -14,7 +14,7 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <span aria-hidden className="inline-block h-9 w-9" />;
+    return <span aria-hidden className="inline-block h-8 w-8" />;
   }
 
   const isDark = resolvedTheme === "dark";
@@ -24,9 +24,9 @@ export function ThemeToggle() {
       type="button"
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-dim transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:ring-accent"
+      className="grid h-8 w-8 place-items-center rounded-full text-muted transition-colors hover:bg-fg/5 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      {isDark ? <FaSun size={18} /> : <FaMoon size={18} />}
+      {isDark ? <FaSun size={15} /> : <FaMoon size={15} />}
     </button>
   );
 }
