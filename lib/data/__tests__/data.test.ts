@@ -5,7 +5,7 @@ import { projects } from "../projects";
 describe("content data", () => {
   it("has both resume roles in reverse-chronological order", () => {
     expect(experience.map((e) => e.company)).toEqual([
-      "Panaroma Intelligence Solutions",
+      "Holmes AI Pvt. Ltd.",
       "InvoLead Services Pvt. Ltd.",
     ]);
   });
@@ -15,7 +15,9 @@ describe("content data", () => {
       "Languages",
       "Development",
       "Infra/DevOps",
-      "Data",
+      "Data & Messaging",
+      "Observability",
+      "AI / LLM",
     ]);
   });
 

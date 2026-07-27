@@ -14,7 +14,7 @@ describe("blog content loader", () => {
     expect(post).not.toBeNull();
     expect(post?.title).toBe("Pulling Auth Out of the Monolith");
     expect(post?.tags).toContain("keycloak");
-    expect(post?.company).toBe("Panaroma Intelligence Solutions");
+    expect(post?.company).toBe("Holmes AI Pvt. Ltd.");
   });
 
   it("computes a human-readable reading time", () => {

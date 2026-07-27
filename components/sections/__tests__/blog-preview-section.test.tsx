@@ -7,7 +7,7 @@ const post: BlogPost = {
   title: "Pulling Auth Out of the Monolith",
   date: "2026-08-21",
   tags: ["fastapi", "keycloak"],
-  company: "Panaroma Intelligence Solutions",
+  company: "Holmes AI Pvt. Ltd.",
   role: "Software Engineer",
   excerpt: "How I extracted authentication into a standalone service.",
   readingTime: "9 min read",
