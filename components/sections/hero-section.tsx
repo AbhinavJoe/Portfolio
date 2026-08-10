@@ -1,68 +1,98 @@
-"use client";
-
-import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { useCanRender3D } from "@/lib/hooks/use-can-render-3d";
-import { HeroSceneFallback } from "./hero-scene-fallback";
+import { GithubActivity } from "@/components/github-activity";
+import { Typewriter } from "@/components/typewriter";
+import { Socials } from "@/components/socials";
+import { availability, building, learning, rolePhrases } from "@/lib/data/status";
 
-const HeroScene = dynamic(() => import("./hero-scene").then((mod) => mod.HeroScene), {
-  ssr: false,
-});
+const CARD = "rounded-2xl border bg-surface/30 px-4 py-3 text-sm";
+const CARD_LABEL = "font-mono text-xs uppercase tracking-wider text-faint";
 
 export function HeroSection() {
-  const canRender3D = useCanRender3D();
-
   return (
-    <section
-      id="hero"
-      className="relative mx-auto grid max-w-5xl grid-cols-1 items-end gap-10 overflow-hidden px-6 pb-16 pt-16 md:grid-cols-[1.35fr_0.8fr] md:pb-20 md:pt-24"
-    >
-      {canRender3D ? <HeroScene /> : <HeroSceneFallback />}
+    <section id="hero" className="relative flex min-h-[92vh] items-center overflow-x-clip px-6">
+      <div aria-hidden className="bg-grid pointer-events-none absolute inset-0 -z-10" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[46rem] w-[60rem] max-w-[100vw] -translate-x-1/2 bg-[radial-gradient(closest-side,rgb(var(--accent)/0.07),transparent)]"
+      />
 
-      <div>
-        <p
-          data-trace-group="hero-role"
-          className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-strong)_40%,transparent)] px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-accent-strong"
-        >
-          <span aria-hidden className="h-[5px] w-[5px] rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
-          Software Engineer
-        </p>
-        <h1 className="mt-6 text-balance font-heading text-5xl font-semibold leading-[0.98] tracking-tight text-text sm:text-6xl md:text-7xl">
-          Abhinav Joshi
-        </h1>
-        <p className="mt-5 max-w-[30ch] text-pretty text-lg text-text-dim sm:text-xl">
+      <div className="mx-auto w-full max-w-content pb-12 pt-28">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <div className="relative h-24 w-24 shrink-0 select-none sm:h-28 sm:w-28 md:h-32 md:w-32">
+            <Image
+              src="/images/profile.jpg"
+              alt="Abhinav Joshi"
+              width={256}
+              height={256}
+              priority
+              className="h-full w-full rounded-2xl border border-border object-cover object-top shadow-xl"
+            />
+            {/* CRT scanlines + a slow sweeping bar over the portrait. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20"
+            >
+              <div className="animate-scanline absolute inset-0 h-1 bg-white/30 blur-[1px]" />
+            </div>
+          </div>
+
+          <h1 className="text-[2.2rem] font-bold leading-[1.05] tracking-tight sm:text-6xl">
+            <span className="bg-gradient-to-r from-fg to-muted bg-clip-text text-transparent">
+              Abhinav Joshi.
+            </span>
+            <br />
+            <span
+              data-trace-group="hero-role"
+              className="inline-block font-mono text-xl font-medium text-muted sm:text-2xl"
+            >
+              <Typewriter phrases={rolePhrases} />
+              <span aria-hidden className="animate-blink ml-1 inline-block h-[1em] w-[2px] translate-y-[3px] bg-muted/60" />
+            </span>
+          </h1>
+        </div>
+
+        <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted sm:mt-8 sm:text-lg">
           I build the load-bearing parts — auth, task queues, the service three other services
           quietly depend on.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a href="#projects" className={buttonVariants({ variant: "primary", size: "md" })}>
+
+        <div className="mt-6 flex flex-wrap items-center gap-4 sm:mt-8">
+          <a
+            href="#projects"
+            className="inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-sm font-medium text-bg transition-all duration-300 hover:scale-[1.05] hover:shadow-lg hover:shadow-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          >
             See the work
           </a>
-          <Link href="/blog" className={buttonVariants({ variant: "outline", size: "md" })}>
-            Read the writing
-          </Link>
+          <Socials traced />
         </div>
-      </div>
 
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute -inset-x-[8%] -inset-y-[10%] -z-10 blur-2xl"
-          style={{
-            background:
-              "radial-gradient(60% 55% at 50% 40%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 72%)",
-          }}
-        />
-        <Image
-          src="/images/profile.jpg"
-          alt="Abhinav Joshi"
-          width={480}
-          height={600}
-          className="aspect-[4/5] w-full rounded-lg object-cover object-top grayscale-[35%] contrast-[1.05]"
-          priority
-        />
+        <ul aria-label="Current status" className="mt-8 grid gap-3 sm:mt-12 sm:grid-cols-3">
+          <li className={`${CARD} flex items-center gap-2`}>
+            <span aria-hidden className="relative flex h-2 w-2">
+              {availability.open && (
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70 motion-safe:animate-ping" />
+              )}
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${availability.open ? "bg-emerald-400" : "bg-faint"}`}
+              />
+            </span>
+            <span className="text-muted">
+              {availability.open ? availability.openLabel : availability.closedLabel}
+            </span>
+          </li>
+          <li className={CARD}>
+            <span className={CARD_LABEL}>building</span>
+            <p className="mt-0.5 line-clamp-2 text-muted">{building}</p>
+          </li>
+          <li className={CARD}>
+            <span className={CARD_LABEL}>learning</span>
+            <p className="mt-0.5 line-clamp-2 text-muted">{learning.join(" · ")}</p>
+          </li>
+        </ul>
+
+        <div className="mt-3">
+          <GithubActivity />
+        </div>
       </div>
     </section>
   );
