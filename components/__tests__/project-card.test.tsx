@@ -47,4 +47,17 @@ describe("ProjectCard", () => {
     expect(screen.queryByRole("button", { name: /play demo/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
   });
+
+  it("shows the status tag and year when provided", () => {
+    render(
+      <ProjectCard
+        project={{ ...project, status: "Completed", year: "2025" }}
+        isPlaying={false}
+        onPlayDemo={jest.fn()}
+        onStopDemo={jest.fn()}
+      />
+    );
+    expect(screen.getByText("Completed")).toBeInTheDocument();
+    expect(screen.getByText("2025")).toBeInTheDocument();
+  });
 });
