@@ -10,7 +10,9 @@ export function SkillsSection() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {skillGroups.map((group) => (
             <div key={group.category}>
-              <h3 className="mb-3 font-semibold text-text">{group.category}</h3>
+              <h3 data-trace-group="skills" className="mb-3 font-semibold text-text">
+                {group.category}
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {group.items.map((item) => (
                   <Badge key={item}>{item}</Badge>

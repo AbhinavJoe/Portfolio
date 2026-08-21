@@ -23,7 +23,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <article className="mx-auto max-w-3xl px-6 py-20">
-      <Link href="/blog" className="mb-8 inline-block text-sm text-accent-strong">
+      <Link href="/blog" className="mb-8 block text-sm text-accent-strong">
         ← Back to blog
       </Link>
       <span className="font-mono text-xs text-text-dim">

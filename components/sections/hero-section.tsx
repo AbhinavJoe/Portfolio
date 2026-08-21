@@ -21,7 +21,9 @@ export function HeroSection() {
     >
       {canRender3D ? <HeroScene /> : <HeroSceneFallback />}
       <div className="flex-1 space-y-6 text-center md:text-left">
-        <p className="font-mono text-sm uppercase tracking-wide text-teal">Software Engineer</p>
+        <p data-trace-group="hero-role" className="font-mono text-sm uppercase tracking-wide text-teal">
+          Software Engineer
+        </p>
         <h1 className="text-4xl font-bold text-text md:text-6xl">Abhinav Joshi</h1>
         <p className="max-w-prose text-lg text-text-dim">
           I build backend systems, auth, and data pipelines — currently at Panaroma Intelligence
