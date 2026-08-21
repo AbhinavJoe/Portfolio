@@ -12,4 +12,9 @@ describe("HeroSection", () => {
     render(<HeroSection />);
     expect(screen.getByAltText(/abhinav joshi/i)).toBeInTheDocument();
   });
+
+  it("tags the role label as the scroll-trace indicator's starting waypoint", () => {
+    render(<HeroSection />);
+    expect(screen.getByText(/software engineer/i)).toHaveAttribute("data-trace-group", "hero-role");
+  });
 });

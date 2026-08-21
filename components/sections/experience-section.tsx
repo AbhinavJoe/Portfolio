@@ -41,9 +41,11 @@ export function ExperienceSection() {
     <section id="experience" ref={sectionRef} className="mx-auto max-w-3xl px-6 py-20">
       <h2 className="mb-10 font-mono text-sm uppercase tracking-wide text-teal">Experience</h2>
       <div className="flex flex-col gap-16">
-        {experience.map((entry) => (
+        {experience.map((entry, index) => (
           <article key={entry.company} data-experience-item className="border-l-2 border-border pl-6">
-            <h3 className="text-xl font-semibold text-text">{entry.company}</h3>
+            <h3 data-trace-group={`exp-${index}`} className="text-xl font-semibold text-text">
+              {entry.company}
+            </h3>
             <p className="text-sm text-text-dim">
               {entry.role} · {entry.start} — {entry.end}
             </p>

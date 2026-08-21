@@ -9,7 +9,9 @@ export function BlogPreviewSection({ posts }: { posts: BlogPost[] }) {
   return (
     <section id="blog-preview" className="mx-auto max-w-5xl px-6 py-20">
       <div className="mb-10 flex items-center justify-between">
-        <h2 className="font-mono text-sm uppercase tracking-wide text-teal">From the blog</h2>
+        <h2 data-trace-group="blog-preview" className="font-mono text-sm uppercase tracking-wide text-teal">
+          From the blog
+        </h2>
         <Link href="/blog" className="text-sm text-accent-strong hover:underline">
           View all →
         </Link>
