@@ -14,6 +14,7 @@ const config: Config = {
         accent: "var(--accent)",
         "accent-strong": "var(--accent-strong)",
         teal: "var(--teal)",
+        "focus-strong": "var(--focus-strong)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "IBM Plex Sans", "system-ui", "sans-serif"],
