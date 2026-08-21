@@ -5,6 +5,8 @@ export type Project = {
   video: string;
   thumbnail: string;
   link: string;
+  /** Set to false when no real demo recording exists for this project — hides the "Play Demo" affordance instead of borrowing another project's video. Defaults to true when omitted. */
+  hasDemo?: boolean;
 };
 
 export const projects: Project[] = [
@@ -15,6 +17,7 @@ export const projects: Project[] = [
     video: "/samples/Reactflow.mp4",
     thumbnail: "/thumbnail/Reactflow.png",
     link: "https://github.com/AbhinavJoe/KubeCentrix",
+    hasDemo: false,
   },
   {
     title: "Reactflow-X-DAG",
