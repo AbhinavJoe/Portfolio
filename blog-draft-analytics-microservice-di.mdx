@@ -1,0 +1,130 @@
+---
+title: "One Analytics Service, Two Products"
+slug: "analytics-microservice-di"
+date: "2026-03-01"
+tags: ["fastapi", "python", "dependency-injection", "backend-architecture", "microservices"]
+company: "Panaroma Intelligence Solutions"
+role: "Software Engineer"
+excerpt: "How a single FastAPI analytics microservice served two separate products off one router, using a request-scoped resolver and a dependency-injector container to dispatch to product-specific services behind a shared Protocol."
+---
+
+## TL;DR
+
+I owned an analytics microservice that served two products — a contract management platform and a supplier management platform — off a single FastAPI router. Instead of forking the service or hardcoding per-product branches through the codebase, I resolved the product from a `source` path segment at the edge, used a `dependency-injector` container to build the right client and services for that source, and had every route depend only on two `Protocol` interfaces (`DashboardServiceProtocol`, `AnalyticsServiceProtocol`) so the router never knew which product it was talking to.
+
+## Context & the problem
+
+The service started as the analytics backend for the contract management product and later had to grow a second consumer — a supplier management dashboard and chatbot with its own MongoDB database (`SUPPLIER_DB` vs the contract product's database in `src/core/db.py`), its own domain schema, and its own chat/intent pipeline. The two products needed the same shape of functionality — a dashboard endpoint, an "available charts" endpoint, add/delete-graph endpoints, and a natural-language chat endpoint — but backed by structurally different data and different LLM prompting logic.
+
+Forking the service into two deployments was the obvious alternative and I rejected it early. Both products shared infra concerns (auth, caching via `CacheManager`, LLM provider setup, Prometheus instrumentation) and the route surface was identical in shape, so a fork would have meant duplicating and re-syncing all of that indefinitely. The other alternative — one service, but with `if source == "contract"` branches sprinkled through every handler — was already partially in the codebase early on and became unmaintainable fast (route logic, chart logic, and chat logic all needed to branch independently). The design that stuck was: one router, one set of endpoints, and push the "which product is this?" decision to a single seam.
+
+## Architecture / approach
+
+The request path looks like `/{source}/dashboard`, `/{source}/chat`, etc., where `source` is `contract` or `supplier` (`VALID_SOURCES = {"contract", "supplier"}` in `src/core/constants.py`). A Starlette middleware, `RequestRouter` (`src/request_router.py`), runs before the route handler, reads the first path segment, validates it against `VALID_SOURCES`, and resolves the correct database and client from the `dependency-injector` `Container`:
+
+```mermaid
+flowchart LR
+    A[Request: /supplier/chat] --> B[AuthMiddleware]
+    B --> C[RequestRouter middleware]
+    C -->|reads 'source' path segment| D[Container.databases()]
+    C -->|client_factory(source, db)| E[ContractClient / SupplierClient]
+    E -->|request.state.client, .db| F[Router: /source/chat]
+    F -->|Depends: get_analytics_facade| G{isinstance client?}
+    G -->|ContractClient| H[ContractAnalyticsFacade]
+    G -->|SupplierClient| I[SupplierAnalyticsFacade]
+    H & I -->|implements| J[AnalyticsServiceProtocol]
+```
+
+The `Container` (`src/core/container.py`) is where the DI wiring lives. It holds two Mongo clients as singletons, a `providers.Dict` of per-product databases, and `providers.Factory` entries for each product's dashboard service and analytics facade:
+
+```python
+databases = providers.Dict(
+    contract=providers.Singleton(db.get_contract_database, client=contract_mongo_client),
+    supplier=providers.Singleton(db.get_supplier_database, client=pantonic_mongo_client),
+)
+
+client_factory = providers.Object(client_factory)
+
+contract_dashboard_service = providers.Factory(ContractDashboardService)
+supplier_dashboard_service = providers.Factory(SupplierDashboardService)
+contract_analytics_facade = providers.Factory(ContractAnalyticsFacade)
+supplier_analytics_facade = providers.Factory(SupplierAnalyticsFacade)
+```
+
+Once `RequestRouter` has stashed the resolved `client` and `db` on `request.state`, FastAPI's own `Depends` system takes over. `src/utils/dependencies.py` inspects `request.state.client`'s type and asks the container for the matching factory-produced service — this is the actual per-request resolver, sitting one layer above the DI container:
+
+```python
+def get_analytics_facade(request: Request) -> AnalyticsServiceProtocol:
+    client, database, cache_manager, container = get_client_service(request)
+    if isinstance(client, ContractClient):
+        return container.contract_analytics_facade(cache=cache_manager, db=database)
+    return container.supplier_analytics_facade(cache=cache_manager, db=database)
+```
+
+Every route handler in `src/router.py` depends on `DashboardServiceProtocol` or `AnalyticsServiceProtocol` — never on a concrete class:
+
+```python
+@router.post("/{source}/chat")
+async def chat_with_user_prompt(
+    source: str,
+    http_request: Request,
+    request: UserPromptRequest,
+    analytics_facade: AnalyticsServiceProtocol = Depends(deps.get_analytics_facade),
+):
+    ...
+    return await analytics_facade.chat(id, request.user_prompt)
+```
+
+`AnalyticsServiceProtocol` and `DashboardServiceProtocol` live in `src/utils/base_classes.py` as `typing.Protocol` classes — structural typing, not inheritance. `ContractAnalyticsFacade` and `SupplierAnalyticsFacade` both satisfy `AnalyticsServiceProtocol` by shape alone; nothing in the router imports either concrete facade.
+
+## Key decisions & trade-offs
+
+**Resolve the product at request time, not at deploy/route-registration time.** Every route is registered once, under `/{source}/...`, and the concrete services are built per-request from `request.state.client`/`request.state.db`. The alternative — static routing, i.e. two separate `APIRouter`s (`/contract/...`, `/supplier/...`) each wired to hardcoded services — would have been simpler to read but meant every new endpoint had to be written twice, and any shared middleware/auth logic had to agree across two router trees. Request-time resolution meant one router definition, one place to add a new endpoint, and the product-specific behavior was fully contained in the DI factories and the concrete service classes.
+
+**One shared Protocol per capability, not per-product endpoints.** `DashboardServiceProtocol` and `AnalyticsServiceProtocol` define the contract; `Contract*` and `Supplier*` implementations diverge freely underneath. The rejected alternative was giving each product its own endpoint namespace with product-specific request/response shapes — which is in fact closer to what the service evolved toward later in its history, once per-product request/response shapes had diverged enough that separate route files (rather than one shared `/{source}/...` router) started to make more sense. For two products with genuinely identical route *shapes*, the single-protocol approach kept the router thin; it stopped paying for itself once that assumption broke — more on that below.
+
+**Type-check the dispatch with `isinstance`, not a config lookup.** `get_dashboard_service`/`get_analytics_facade` branch on `isinstance(client, ContractClient)` rather than keying off the `source` string again. This meant the *client* was the single source of truth for "which product," and the resolver couldn't drift out of sync with what `RequestRouter` had already decided — at the cost of a slightly unusual pattern (type-checking a DI-produced object) that a new engineer has to learn on first read.
+
+## Implementation highlights
+
+The `client_factory` itself is a plain function wrapped as `providers.Object` so the container can hand it out as a dependency without it needing to be a `Provider` subclass:
+
+```python
+def client_factory(client_service: str, db_connector: AsyncIOMotorDatabase) -> ContractClient | SupplierClient:
+    if client_service == "contract":
+        return ContractClient(db_connector=db_connector)
+    elif client_service == "supplier":
+        return SupplierClient(db_connector=db_connector)
+    else:
+        raise ValueError(f"Unknown client service: {client_service}")
+```
+
+`RequestRouter.dispatch` is the actual per-request resolver — it fails closed on an unrecognized or missing `source` before any handler runs, so invalid products never reach a service:
+
+```python
+if source not in VALID_SOURCES:
+    return JSONResponse(
+        status_code=400,
+        content={"detail": f"Invalid source '{source}'. Must be one of: {', '.join(VALID_SOURCES)}"}
+    )
+```
+
+`AuthMiddleware` runs *after* `RequestRouter` in the dependency chain but is registered so it executes second (Starlette middleware order is LIFO — `main.py` even has a comment spelling out the execution flow: `CORS -> RequestRouter -> Auth -> App`) — it reads `request.state.client`, which only exists because `RequestRouter` ran first. That ordering dependency is implicit and undocumented outside that one comment, which is exactly the kind of thing I'd tighten up today.
+
+## Challenges hit
+
+**Keeping product logic out of the router without duplicating it.** The router's only per-product-aware code is the `source` string used for a couple of `id = user_id if source == "supplier" else org_id` branches (Contract keyed by org, Supplier keyed by user) — everything else routes through the Protocol. That one remaining branch is a small crack in the abstraction: the router still needs to know *something* product-specific about identity resolution, which the Protocol doesn't capture.
+
+**Evolving the shared contract without breaking either consumer.** The chat pipeline for Contract and Supplier diverged significantly over time — Supplier grew intent classification and safety/operation checks ahead of query generation, while Contract stayed a simpler generate → summarize flow. Both still satisfy `AnalyticsServiceProtocol.chat(id, user_prompt) -> ChatResponse`, so the contract held even as one implementation got considerably more complex than the other — the Protocol's minimalism (a single method) is what made that possible.
+
+**Testing across both products.** Test coverage in the repo (`src/tests/test_supplier_graphs.py`, `test_supplier_metrics.py`) ended up concentrated on the Supplier side, reflecting where product priority sat at the time — a gap I'd flag rather than paper over. The shared-router design made it easy to add tests against the Protocol interface, but that capacity wasn't matched by equivalent Contract-side coverage.
+
+**The middleware→state→DI handoff was fragile.** Because `RequestRouter` communicates with the route layer through `request.state.client`/`request.state.db` rather than FastAPI's native `Depends` graph, the correctness of the whole system depends on middleware ordering that isn't enforced by the type system — just a comment in `main.py`. This is the piece I'd change first (see below).
+
+## Impact / results
+
+Concretely, this design let one deployable serve both products' full analytics surface — dashboards, saved charts, and NL chat — through a single route table, without either product's service code importing or knowing about the other. Later in the service's history, as the two products' request/response shapes diverged further, the team moved toward splitting route definitions per product instead of keeping everything behind the shared `/{source}/...` prefix — a sign that the single-router approach was the right early bet but had a natural ceiling once the products stopped looking alike at the edge.
+
+## What I'd do differently
+
+I'd push the source resolution into FastAPI's dependency graph directly (a `Depends`-based resolver returning the client) instead of a middleware writing to `request.state`. It removes the implicit ordering requirement between `RequestRouter` and `AuthMiddleware`, makes the dependency explicit and typed at each route, and is unit-testable without spinning up the ASGI middleware stack. I'd also resolve the product from an authenticated identity/claim rather than a trusted path segment where possible, and I'd have introduced the per-product router split a bit earlier — the single shared-Protocol router was the right call while both products' endpoints looked alike, but it was already showing strain by the time their request/response shapes diverged.
