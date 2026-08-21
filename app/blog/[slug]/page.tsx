@@ -30,7 +30,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {post.date} · {post.readingTime} · {post.company}
       </span>
       <h1 className="mt-2 mb-8 text-3xl font-bold text-text md:text-4xl">{post.title}</h1>
-      <div className="prose-invert">
+      <div>
         <MDXRemote source={post.content} components={mdxComponents} />
       </div>
     </article>
