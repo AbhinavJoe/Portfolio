@@ -19,6 +19,7 @@ export function TagFilter({
         onClick={() => onSelect(null)}
         className={cn(
           "rounded-full border px-3 py-1 font-mono text-xs",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:ring-accent",
           activeTag === null ? "border-accent text-accent-strong" : "border-border text-text-dim"
         )}
       >
@@ -32,6 +33,7 @@ export function TagFilter({
           onClick={() => onSelect(tag)}
           className={cn(
             "rounded-full border px-3 py-1 font-mono text-xs",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:ring-accent",
             activeTag === tag ? "border-accent text-accent-strong" : "border-border text-text-dim"
           )}
         >
