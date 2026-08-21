@@ -13,6 +13,7 @@ const config: Config = {
         "text-dim": "var(--text-dim)",
         accent: "var(--accent)",
         "accent-strong": "var(--accent-strong)",
+        "accent-foreground": "var(--accent-foreground)",
         teal: "var(--teal)",
         "focus-strong": "var(--focus-strong)",
       },
