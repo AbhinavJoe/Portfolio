@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PostCard } from "@/components/blog/post-card";
 import type { BlogPost } from "@/lib/blog";
+import { Reveal } from "@/components/layout/reveal";
 
 export function BlogPreviewSection({ posts }: { posts: BlogPost[] }) {
   const latest = posts.slice(0, 3);
@@ -13,11 +14,13 @@ export function BlogPreviewSection({ posts }: { posts: BlogPost[] }) {
           View all →
         </Link>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {latest.map((post) => (
-          <PostCard key={post.slug} post={post} />
-        ))}
-      </div>
+      <Reveal>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {latest.map((post) => (
+            <PostCard key={post.slug} post={post} />
+          ))}
+        </div>
+      </Reveal>
     </section>
   );
 }
