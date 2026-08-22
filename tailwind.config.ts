@@ -20,6 +20,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "IBM Plex Sans", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "IBM Plex Mono", "monospace"],
+        heading: ["var(--font-heading)", "Inter", "system-ui", "sans-serif"],
       },
     },
   },

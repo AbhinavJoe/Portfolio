@@ -6,17 +6,20 @@ export function PostCard({ post }: { post: BlogPost }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="flex flex-col gap-3 rounded-xl border border-border bg-bg-raised p-6 transition-colors hover:border-accent"
+      className="grid grid-cols-1 gap-2 border-t border-border py-5 transition-colors first:border-t-0 hover:border-accent sm:grid-cols-[118px_1fr] sm:gap-6 sm:py-5"
     >
-      <span className="font-mono text-xs text-text-dim">
-        {post.date} · {post.readingTime}
+      <span className="font-mono text-[11.5px] leading-relaxed text-text-dim">
+        {post.date}
+        <br className="hidden sm:block" /> {post.readingTime}
       </span>
-      <h3 className="text-lg font-semibold text-text">{post.title}</h3>
-      <p className="text-sm text-text-dim">{post.excerpt}</p>
-      <div className="flex flex-wrap gap-2">
-        {post.tags.map((tag) => (
-          <Badge key={tag}>{tag}</Badge>
-        ))}
+      <div>
+        <h3 className="font-heading text-lg font-semibold tracking-tight text-text">{post.title}</h3>
+        <p className="mt-1.5 max-w-[74ch] text-sm leading-relaxed text-text-dim">{post.excerpt}</p>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {post.tags.map((tag) => (
+            <Badge key={tag}>{tag}</Badge>
+          ))}
+        </div>
       </div>
     </Link>
   );
