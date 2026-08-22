@@ -4,14 +4,17 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { usePrefersReducedMotion } from "@/lib/hooks/use-prefers-reduced-motion";
 
-// One marker slot per simultaneous target the busiest stage needs (Skills'
-// four column headers). Reused for every other stage, where unused slots
-// collapse to zero scale.
-const MARKER_SLOTS = 4;
+// One marker slot per simultaneous target the busiest stage needs (About's
+// eyebrow label plus its four skill-category headers, all traced together).
+// Reused for every other stage, where unused slots collapse to zero scale.
+const MARKER_SLOTS = 5;
 
 const UNDERLINE_HEIGHT = 3;
 const UNDERLINE_GAP = 4; // px below the text baseline
-const CIRCLE_PADDING = 10; // extra radius around an icon's own bounds
+// Extra radius around an icon's own bounds. Kept small deliberately — the
+// social icons sit close together (and close to the "Find me on:" label),
+// so a wider halo here overlapped the label and the neighboring icon.
+const CIRCLE_PADDING = 6;
 
 // The primary marker (slot 0) shrinks to this size while riding the rail
 // between stages.
@@ -42,16 +45,30 @@ const SETTLE_OFFSET = 260;
 
 // The marker only morphs during the final stretch of scroll before each
 // stage's arrival point, so it spends the rest of the scroll distance at
-// rest on the current stage rather than perpetually catching up. The
-// transition's length is a fraction of the actual scroll gap between two
-// stages (capped at MAX_TRANSITION_LENGTH) rather than one fixed pixel
-// value — a flat value either felt like a rushed snap on generously-spaced
-// stages or ate the entire gap (leaving no rest at all) on closely-spaced
-// ones. Nearby stages (e.g. the Experience heading and the Panaroma heading
-// right under it) still just get a shorter, faster morph, proportional to
-// their small gap.
-const TRANSITION_FRACTION = 0.85;
-const MAX_TRANSITION_LENGTH = 800;
+// rest on the current stage rather than perpetually catching up — most of
+// the gap between two stages, so there's real time to stop and read before
+// it fires away, in both scroll directions (this is purely a function of
+// scrollY, not a one-way timer). The transition's length is a fraction of
+// the actual scroll gap between two stages (capped at MAX_TRANSITION_LENGTH)
+// rather than one fixed pixel value — a flat value either felt like a
+// rushed snap on generously-spaced stages or ate the entire gap (leaving no
+// rest at all) on closely-spaced ones. Nearby stages (e.g. the Experience
+// heading and the Panaroma heading right under it) still just get a
+// shorter, faster morph, proportional to their small gap.
+const TRANSITION_FRACTION = 0.45;
+const MAX_TRANSITION_LENGTH = 700;
+
+// document.documentElement.scrollHeight/window.innerHeight are rounded to
+// whole CSS pixels, but the browser's actual native scroll ceiling can sit a
+// fraction of a px below the integer difference between them (sub-pixel
+// layout, non-100% zoom, Lenis's own eased scroll target). Without this
+// slack, the last stage's arrival point gets clamped to a scrollY the page
+// can never quite reach — window.scrollY tops out just short of it forever
+// — so the marker sits permanently a hair into its transition instead of
+// settling into the final target (visible as the social-icon circles never
+// fully arriving, and looking wrong on the way back up since it never had a
+// correct resting shape to reverse from).
+const MAX_SCROLL_EPSILON = 2;
 
 type Shape = { x: number; y: number; width: number; height: number };
 type Stage = { group: string; elements: HTMLElement[] };
@@ -131,90 +148,177 @@ function lerpShape(from: Shape, to: Shape, t: number): Shape {
   };
 }
 
-// The primary marker's transit shape: retract from `from` into a small dot
-// parked on the rail at `from`'s own row, slide that dot down the rail to
-// `to`'s row, then extend from the dot into `to`. Each phase interpolates
-// continuously from where the previous one ended, so there's no seam at the
-// phase boundaries.
-function transitDotShape(from: Shape, to: Shape, railX: number, t: number): Shape {
-  const dotAtFrom: Shape = {
-    x: railX,
-    y: from.y + from.height / 2 - DOT_DIAMETER / 2,
-    width: DOT_DIAMETER,
-    height: DOT_DIAMETER,
-  };
-  const dotAtTo: Shape = {
-    x: railX,
-    y: to.y + to.height / 2 - DOT_DIAMETER / 2,
-    width: DOT_DIAMETER,
-    height: DOT_DIAMETER,
-  };
+function dotAtCurrentRow(railX: number, scrollY: number): Shape {
+  return { x: railX, y: scrollY + SETTLE_OFFSET - DOT_DIAMETER / 2, width: DOT_DIAMETER, height: DOT_DIAMETER };
+}
 
+function easeOutCubic(p: number): number {
+  const x = Math.min(Math.max(p, 0), 1);
+  return 1 - Math.pow(1 - x, 3);
+}
+
+function easeInCubic(p: number): number {
+  const x = Math.min(Math.max(p, 0), 1);
+  return x * x * x;
+}
+
+// Arriving at a target eases in two overlapping stages instead of moving
+// x/y/size all at once in a straight line: the row (y) settles first —
+// ride the rail down to the right level — then the marker slides in
+// horizontally and grows into the target's real size. A single linear lerp
+// cut diagonally across the page while also inflating from a 10px dot into
+// a full-size shape at the same time, which read as clunky arriving at a
+// pair of social-icon circles that sit well off to the right of the rail.
+//
+// Interpolated by CENTER point, not top-left corner: rowProgress finishes
+// (0.55) well before stepProgress does (1.0), so for most of the approach
+// height is still short of its final value. Deriving y from a fixed top-left
+// corner while height keeps growing would leave the shape's vertical center
+// trailing above the target's real center until the very last instant —
+// visibly climbing into place off-center rather than expanding around the
+// icon it's supposed to be encircling. Holding the center on the eased path
+// instead (x/y = center - size/2, using the CURRENT size) keeps the marker's
+// middle exactly where rowProgress/stepProgress put it at every frame.
+function settleIntoTarget(from: Shape, to: Shape, progress: number): Shape {
+  const rowProgress = easeOutCubic(Math.min(progress / 0.55, 1));
+  const stepProgress = easeInCubic(Math.max((progress - 0.35) / 0.65, 0));
+  const width = gsap.utils.interpolate(from.width, to.width, stepProgress);
+  const height = gsap.utils.interpolate(from.height, to.height, stepProgress);
+  const centerX = gsap.utils.interpolate(from.x + from.width / 2, to.x + to.width / 2, stepProgress);
+  const centerY = gsap.utils.interpolate(from.y + from.height / 2, to.y + to.height / 2, rowProgress);
+  return { x: centerX - width / 2, y: centerY - height / 2, width, height };
+}
+
+// The mirror of settleIntoTarget for leaving a target: step off
+// horizontally (and shrink) first while still at the target's own row, then
+// let the row itself start giving way to wherever the rail travel picks up
+// next. Same center-based interpolation as settleIntoTarget, for the same
+// reason — a shrinking circle should collapse toward its own center, not
+// visibly slide off it while its size is still catching up.
+function stepOffTarget(from: Shape, to: Shape, progress: number): Shape {
+  const stepProgress = easeOutCubic(Math.min(progress / 0.65, 1));
+  const rowProgress = easeInCubic(Math.max((progress - 0.45) / 0.55, 0));
+  const width = gsap.utils.interpolate(from.width, to.width, stepProgress);
+  const height = gsap.utils.interpolate(from.height, to.height, stepProgress);
+  const centerX = gsap.utils.interpolate(from.x + from.width / 2, to.x + to.width / 2, stepProgress);
+  const centerY = gsap.utils.interpolate(from.y + from.height / 2, to.y + to.height / 2, rowProgress);
+  return { x: centerX - width / 2, y: centerY - height / 2, width, height };
+}
+
+// The primary marker's transit shape: retract from `from` into a small dot
+// on the rail, travel down the rail, then extend from a dot into `to`.
+// Travel tracks the live scroll position (`liveDot`) rather than
+// interpolating between `from`'s and `to`'s own fixed rows — two headings
+// can sit much farther apart in the document than the transition's own
+// scroll window is wide (a long section in between), so a straight
+// document-position lerp would leave the dot stranded off-screen for most
+// of the crossing. Retract and extend, though, each ease toward/from a
+// FROZEN anchor (`retractEndDot`/`extendFromDot`, the dot's position at the
+// instant that sub-phase starts) rather than the continuously-moving live
+// dot — easing toward a target that itself keeps sliding every frame is
+// what made arriving at a shape (especially a circle, growing symmetrically
+// in both dimensions) read as janky rather than one clean motion. `from` is
+// expected to already be resolved via `restingOrTravelingShapes` (so it's
+// whatever was actually on screen a moment ago, heading or dot) — the
+// retract phase can then unconditionally ease from it.
+function transitDotShape(
+  from: Shape,
+  to: Shape,
+  t: number,
+  retractEndDot: Shape,
+  extendFromDot: Shape,
+  liveDot: Shape
+): Shape {
   if (t < PHASE_RETRACT) {
-    return lerpShape(from, dotAtFrom, t / PHASE_RETRACT);
+    return stepOffTarget(from, retractEndDot, t / PHASE_RETRACT);
   }
   if (t < PHASE_RETRACT + PHASE_TRAVEL) {
-    return lerpShape(dotAtFrom, dotAtTo, (t - PHASE_RETRACT) / PHASE_TRAVEL);
+    return liveDot;
   }
-  return lerpShape(dotAtTo, to, (t - PHASE_RETRACT - PHASE_TRAVEL) / PHASE_EXTEND);
+  return settleIntoTarget(extendFromDot, to, (t - PHASE_RETRACT - PHASE_TRAVEL) / PHASE_EXTEND);
 }
 
 function isCollapsed(shape: Shape): boolean {
   return shape.width === 0 && shape.height === 0;
 }
 
-// A secondary marker (Skills' other three column headers) has no shape of
-// its own on one side of most transitions — it's collapsed there because
-// that stage only needed the primary marker. Rather than growing out of (or
-// shrinking into) a fixed point left behind at the old heading, it should
-// look like it's riding along inside the primary marker's own dot and only
-// peeling off once that dot arrives — `primaryFrom`/`primaryTo` are the
-// primary marker's own shapes for this same transition, used only to find
-// the dot's row at each point in its journey.
+// A margin so a shape just barely peeking past the top/bottom edge still
+// counts as fully "in view" (no blending) rather than starting to ease
+// toward the fallback dot right at the boundary.
+const VISIBILITY_MARGIN = 24;
+
+// The marker's fallback whenever its target heading isn't on screen: a
+// plain dot riding the rail at a fixed row within the viewport (the same
+// SETTLE_OFFSET row a heading "arrives" at), so it keeps following the
+// scroll through a long section instead of sitting invisibly over a
+// heading that's already scrolled past.
+function travelingDotShapes(railX: number, scrollY: number): Shape[] {
+  const dot = dotAtCurrentRow(railX, scrollY);
+  return Array.from({ length: MARKER_SLOTS }, (_, i) => (i === 0 ? dot : collapsedShape(dot)));
+}
+
+// How far past the viewport's (margin-padded) top or bottom edge a shape
+// currently sits, in px — 0 while fully in view, growing as it scrolls
+// further out either edge.
+function overshootPastViewport(shape: Shape, scrollY: number): number {
+  const viewTop = scrollY - VISIBILITY_MARGIN;
+  const viewBottom = scrollY + window.innerHeight + VISIBILITY_MARGIN;
+  return Math.max(viewTop - (shape.y + shape.height), shape.y - viewBottom, 0);
+}
+
+// Eases the resting marker from the heading's exact shape into the
+// traveling dot (and back) as the heading crosses the viewport edge, over
+// this many px of additional scroll — rather than snapping instantly
+// between the two the moment a hard visibility check flips, which read as
+// the marker jumping between the underline and the rail.
+const RESTING_BLEND_ZONE = 120;
+
+function restingOrTravelingShapes(shapes: Shape[], railX: number, scrollY: number): Shape[] {
+  const overshoot = overshootPastViewport(shapes[0], scrollY);
+  if (overshoot <= 0) return shapes;
+
+  const blend = Math.min(overshoot / RESTING_BLEND_ZONE, 1);
+  const dot = travelingDotShapes(railX, scrollY);
+  return shapes.map((shape, i) => lerpShape(shape, dot[i], blend));
+}
+
+// A secondary marker (About's other skill-category headers, or the second
+// social icon) has no shape of its own on one side of most transitions —
+// it's collapsed there because that stage only needed the primary marker.
+// Rather than growing out of (or shrinking into) a fixed point left behind
+// at the old heading, it should look like it's riding along inside the
+// primary marker's own dot and only peeling off once that dot arrives.
+// It shares the SAME frozen anchor dots as the primary marker (rather than
+// chasing the primary's own already-easing, per-frame-moving shape) so the
+// two markers move in lockstep off a stable reference instead of one
+// eased curve trying to follow another — that compounding was the biggest
+// source of jank arriving at the two social-icon circles together. `from`
+// is expected to already be resolved via `restingOrTravelingShapes`, same
+// as the primary's.
 function secondaryTransitShape(
   from: Shape,
   to: Shape,
-  primaryFrom: Shape,
-  primaryTo: Shape,
-  railX: number,
-  t: number
+  t: number,
+  retractEndDot: Shape,
+  extendFromDot: Shape,
+  liveDot: Shape
 ): Shape {
-  const dotAtFromRow: Shape = {
-    x: railX,
-    y: primaryFrom.y + primaryFrom.height / 2 - DOT_DIAMETER / 2,
-    width: DOT_DIAMETER,
-    height: DOT_DIAMETER,
-  };
-  const dotAtToRow: Shape = {
-    x: railX,
-    y: primaryTo.y + primaryTo.height / 2 - DOT_DIAMETER / 2,
-    width: DOT_DIAMETER,
-    height: DOT_DIAMETER,
-  };
-  const dotRowAt = (progress: number): Shape =>
-    progress < PHASE_RETRACT
-      ? dotAtFromRow
-      : progress < PHASE_RETRACT + PHASE_TRAVEL
-        ? lerpShape(dotAtFromRow, dotAtToRow, (progress - PHASE_RETRACT) / PHASE_TRAVEL)
-        : dotAtToRow;
-  const invisibleAt = (row: Shape): Shape => ({ x: row.x, y: row.y, width: 0, height: 0 });
-
   if (isCollapsed(from)) {
     // This stage needs it (or doesn't, if `to` is also collapsed) — ride
     // invisibly inside the dot until it's done traveling, then emerge from
     // that same point out to the real target.
     if (t < PHASE_RETRACT + PHASE_TRAVEL) {
-      return invisibleAt(dotRowAt(t));
+      return collapsedShape(liveDot);
     }
-    return lerpShape(dotAtToRow, to, (t - PHASE_RETRACT - PHASE_TRAVEL) / PHASE_EXTEND);
+    return settleIntoTarget(collapsedShape(extendFromDot), to, (t - PHASE_RETRACT - PHASE_TRAVEL) / PHASE_EXTEND);
   }
 
   // Only the previous stage needed it — converge into the dot as it
   // retracts, then stay tucked inside for the rest of the journey.
   if (t < PHASE_RETRACT) {
-    return lerpShape(from, dotAtFromRow, t / PHASE_RETRACT);
+    return stepOffTarget(from, collapsedShape(retractEndDot), t / PHASE_RETRACT);
   }
-  return invisibleAt(dotRowAt(t));
+  return collapsedShape(liveDot);
 }
 
 /**
@@ -303,7 +407,10 @@ export function ScrollTraceIndicator() {
       // below it to keep scrolling. Without this clamp, that stage's arrival
       // point would sit past the page's actual max scroll and could never
       // be reached, leaving the marker permanently mid-transition.
-      const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+      const maxScroll = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight - MAX_SCROLL_EPSILON,
+        0
+      );
 
       // The first stage is simply the page's resting state before any
       // scrolling happens — it needs no arrival trigger of its own, only a
@@ -346,12 +453,14 @@ export function ScrollTraceIndicator() {
         return;
       }
 
+      const railX = getRailX();
+
       if (scrollY <= arrivalScrollY[0]) {
-        applyShapes(stageShapes[0]);
+        applyShapes(restingOrTravelingShapes(stageShapes[0], railX, scrollY));
         return;
       }
       if (scrollY >= arrivalScrollY[lastIndex]) {
-        applyShapes(stageShapes[lastIndex]);
+        applyShapes(restingOrTravelingShapes(stageShapes[lastIndex], railX, scrollY));
         return;
       }
 
@@ -360,19 +469,36 @@ export function ScrollTraceIndicator() {
           const transitionStart = transitionStartScrollY[i];
           if (scrollY <= transitionStart) {
             // Still resting on the previous stage — the next one hasn't
-            // started pulling on the marker yet.
-            applyShapes(stageShapes[i - 1]);
+            // started pulling on the marker yet. Falls back to a plain
+            // traveling dot once the previous stage's own heading has
+            // scrolled out of view, so the marker doesn't just vanish for
+            // the rest of a long section.
+            applyShapes(restingOrTravelingShapes(stageShapes[i - 1], railX, scrollY));
             return;
           }
           const t = (scrollY - transitionStart) / (arrivalScrollY[i] - transitionStart);
-          const railX = getRailX();
-          const primaryFrom = stageShapes[i - 1][0];
+          const arrival = arrivalScrollY[i];
+          // What was actually on screen the instant this transition began —
+          // the exact heading shapes, the traveling dot, or something
+          // mid-blend between the two — so the retract phase below always
+          // has a real, continuous starting point to animate from.
+          const fromShapes = restingOrTravelingShapes(stageShapes[i - 1], railX, transitionStart);
+          // Frozen references for the retract and extend sub-phases (see
+          // transitDotShape) — each is the dot's position at the instant
+          // that sub-phase begins, not a value that keeps sliding as the
+          // marker eases toward it.
+          const retractEndScrollY = transitionStart + PHASE_RETRACT * (arrival - transitionStart);
+          const extendStartScrollY = transitionStart + (PHASE_RETRACT + PHASE_TRAVEL) * (arrival - transitionStart);
+          const retractEndDot = dotAtCurrentRow(railX, retractEndScrollY);
+          const extendFromDot = dotAtCurrentRow(railX, extendStartScrollY);
+          const liveDot = dotAtCurrentRow(railX, scrollY);
           const primaryTo = stageShapes[i][0];
+          const primaryShapeNow = transitDotShape(fromShapes[0], primaryTo, t, retractEndDot, extendFromDot, liveDot);
           applyShapes(
-            stageShapes[i - 1].map((from, idx) =>
+            fromShapes.map((from, idx) =>
               idx === 0
-                ? transitDotShape(primaryFrom, primaryTo, railX, t)
-                : secondaryTransitShape(from, stageShapes[i][idx], primaryFrom, primaryTo, railX, t)
+                ? primaryShapeNow
+                : secondaryTransitShape(from, stageShapes[i][idx], t, retractEndDot, extendFromDot, liveDot)
             )
           );
           return;
@@ -413,7 +539,16 @@ export function ScrollTraceIndicator() {
           ref={(el) => {
             markerRefs.current[i] = el;
           }}
-          className="absolute left-0 top-0 h-px w-px origin-top-left rounded-full bg-accent shadow-[0_0_10px_var(--accent)]"
+          // No box-shadow here deliberately: this element is scaled up via
+          // GSAP's scaleX/scaleY from a 1x1px base (see applyShapes below),
+          // and CSS transforms scale the WHOLE paint of an element,
+          // box-shadow blur radius included — a "10px" blur ends up
+          // rendered dozens of times larger at a circle's ~30-40x scale,
+          // constantly resizing every frame. That's what made the
+          // social-icon circles balloon past their targets and look janky
+          // (an oversized blur being repainted every frame is expensive).
+          // A flat fill scales predictably with no such blow-up.
+          className="absolute left-0 top-0 h-px w-px origin-top-left rounded-full bg-accent"
         />
       ))}
     </div>

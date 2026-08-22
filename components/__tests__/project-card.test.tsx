@@ -13,21 +13,37 @@ const project: Project = {
 
 describe("ProjectCard", () => {
   it("shows the title and GitHub link by default", () => {
-    render(<ProjectCard project={project} />);
+    render(<ProjectCard project={project} isPlaying={false} onPlayDemo={jest.fn()} onStopDemo={jest.fn()} />);
     expect(screen.getByText("Test Project")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /github/i })).toHaveAttribute("href", project.link);
   });
 
-  it("flips to the demo video when 'Play Demo' is clicked, and back on 'Back to Details'", () => {
-    render(<ProjectCard project={project} />);
+  // Demo playback is controlled by the parent (ProjectsSection) so only one
+  // card can play at a time — the card itself just reports intent via
+  // onPlayDemo/onStopDemo and renders whatever `isPlaying` says.
+  it("asks the parent to play the demo when 'Play Demo' is clicked", () => {
+    const onPlayDemo = jest.fn();
+    render(<ProjectCard project={project} isPlaying={false} onPlayDemo={onPlayDemo} onStopDemo={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /play demo/i }));
-    expect(screen.getByRole("button", { name: /back to details/i })).toBeInTheDocument();
+    expect(onPlayDemo).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the demo video and asks the parent to stop it when 'Back to Details' is clicked", () => {
+    const onStopDemo = jest.fn();
+    render(<ProjectCard project={project} isPlaying={true} onPlayDemo={jest.fn()} onStopDemo={onStopDemo} />);
     fireEvent.click(screen.getByRole("button", { name: /back to details/i }));
-    expect(screen.getByRole("button", { name: /play demo/i })).toBeInTheDocument();
+    expect(onStopDemo).toHaveBeenCalledTimes(1);
   });
 
   it("does not render a 'Play Demo' button when the project has no real demo", () => {
-    render(<ProjectCard project={{ ...project, hasDemo: false }} />);
+    render(
+      <ProjectCard
+        project={{ ...project, hasDemo: false }}
+        isPlaying={false}
+        onPlayDemo={jest.fn()}
+        onStopDemo={jest.fn()}
+      />
+    );
     expect(screen.queryByRole("button", { name: /play demo/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /github/i })).toBeInTheDocument();
   });
