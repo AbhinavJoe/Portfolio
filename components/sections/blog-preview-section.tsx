@@ -11,12 +11,12 @@ export function BlogPreviewSection({ posts }: { posts: BlogPost[] }) {
       id="blog-preview"
       className="mx-auto grid max-w-5xl grid-cols-1 gap-10 px-6 py-20 md:grid-cols-[148px_1fr] md:py-28"
     >
-      <div
+      <h2
         data-trace-group="blog-preview"
         className="pt-1.5 font-mono text-[11px] uppercase tracking-wide text-text-dim"
       >
-        04 / Writing
-      </div>
+        <span aria-hidden="true">04 / </span>Writing
+      </h2>
       <div>
         <Reveal>
           <div className="flex flex-col">

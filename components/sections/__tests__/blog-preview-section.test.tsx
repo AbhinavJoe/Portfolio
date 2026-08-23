@@ -22,7 +22,7 @@ describe("BlogPreviewSection", () => {
 
   it("tags the heading as a scroll-trace waypoint", () => {
     render(<BlogPreviewSection posts={[post]} />);
-    expect(screen.getByRole("heading", { name: "From the blog" })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: "Writing" })).toHaveAttribute(
       "data-trace-group",
       "blog-preview"
     );
