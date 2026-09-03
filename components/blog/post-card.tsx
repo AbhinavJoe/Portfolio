@@ -6,20 +6,21 @@ export function PostCard({ post }: { post: BlogPost }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="grid grid-cols-1 gap-2 border-t border-border py-5 transition-colors first:border-t-0 hover:border-accent sm:grid-cols-[118px_1fr] sm:gap-6 sm:py-5"
+      className="group block rounded-2xl border bg-surface/30 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      <span className="font-mono text-[11.5px] leading-relaxed text-text-dim">
-        {post.date}
-        <br className="hidden sm:block" /> {post.readingTime}
-      </span>
-      <div>
-        <h3 className="font-heading text-lg font-semibold tracking-tight text-text">{post.title}</h3>
-        <p className="mt-1.5 max-w-[74ch] text-sm leading-relaxed text-text-dim">{post.excerpt}</p>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {post.tags.map((tag) => (
-            <Badge key={tag}>{tag}</Badge>
-          ))}
-        </div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="text-lg font-semibold tracking-tight transition-colors group-hover:text-accent">
+          {post.title}
+        </h3>
+        <span className="font-mono text-xs text-faint">
+          {post.date} · {post.readingTime}
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-muted">{post.excerpt}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {post.tags.map((tag) => (
+          <Badge key={tag}>{tag}</Badge>
+        ))}
       </div>
     </Link>
   );

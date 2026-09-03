@@ -60,7 +60,7 @@ export function RepoList() {
     // the browser instead of routing it into the page's own scroll.
     <div
       data-lenis-prevent
-      className="h-full w-full overflow-y-auto rounded-xl border border-border"
+      className="h-full w-full overflow-y-auto rounded-2xl border bg-surface/30"
     >
       <div className="flex flex-col gap-2 p-3">
         {repos.map((repo) => (
@@ -69,11 +69,11 @@ export function RepoList() {
             href={repo.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-border p-3 hover:border-accent"
+            className="rounded-xl border p-3 transition-colors hover:border-accent/50 hover:bg-fg/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <h3 className="font-mono text-sm font-semibold text-text">{repo.name}</h3>
-            <p className="text-xs text-text-dim">{repo.description ?? "No description"}</p>
-            <p className="mt-1 text-xs text-text-dim">
+            <h3 className="font-mono text-sm font-semibold text-fg">{repo.name}</h3>
+            <p className="mt-0.5 text-xs text-muted">{repo.description ?? "No description"}</p>
+            <p className="mt-1 font-mono text-[11px] text-faint">
               Updated {new Date(repo.updatedAt).toLocaleDateString()} · {repo.license}
             </p>
           </a>
