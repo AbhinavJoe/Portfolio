@@ -19,35 +19,6 @@ function useThemeColor(cssVar: string, fallback: string) {
   return color;
 }
 
-function WireframeCore() {
-  const meshRef = useRef<Mesh>(null);
-  const scrollProgress = useRef(0);
-  const accentColor = useThemeColor("--accent", "#8b7cf6");
-  // The canvas fills the hero section exactly, so its own rect is the range
-  // over which the scene is actually on screen. Measuring against that (rather
-  // than the whole document) means the tilt completes as the hero scrolls past
-  // the top of the viewport, instead of needing a full-page scroll to finish.
-  const canvasEl = useThree((state) => state.gl.domElement);
-
-  useFrame((_, delta) => {
-    const rect = canvasEl.getBoundingClientRect();
-    const total = rect.height || 1;
-    const scrolled = Math.min(Math.max(-rect.top, 0), total);
-    scrollProgress.current = scrolled / total;
-
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.15;
-      meshRef.current.rotation.x = scrollProgress.current * Math.PI * 0.5;
-    }
-  });
-
-  return (
-    <Icosahedron ref={meshRef} args={[1.6, 1]}>
-      <meshBasicMaterial color={accentColor} wireframe />
-    </Icosahedron>
-  );
-}
-
 export function HeroScene() {
   const sparkleColor = useThemeColor("--teal", "#5fe3c4");
 
@@ -65,7 +36,6 @@ export function HeroScene() {
         style={{ pointerEvents: "none" }}
       >
         <ambientLight intensity={0.6} />
-        <WireframeCore />
         <Sparkles count={80} scale={6} size={2} speed={0.3} color={sparkleColor} />
       </Canvas>
     </div>
