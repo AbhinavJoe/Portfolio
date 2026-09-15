@@ -1,44 +1,39 @@
-import { ContactForm } from "@/components/contact-form";
+import { LocalClock } from "@/components/local-clock";
 import { Socials } from "@/components/socials";
-import { RepoList } from "@/components/repo-list";
 
 export function ContactSection() {
   return (
-    <footer id="contact" className="mx-auto max-w-5xl px-6 pb-20 pt-16 md:pb-28">
-      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-4 border-t border-border pt-10">
-        <div>
-          <h2 className="font-heading text-2xl font-semibold tracking-tight text-text">
-            Let&apos;s talk shop.
-          </h2>
-          <p className="mt-1.5 text-sm text-text-dim">
-            Backend, infra, or a queue that keeps double-firing.
-          </p>
-        </div>
-        <span className="flex-1" />
-        <Socials />
-      </div>
-
-      <div className="mt-14 grid grid-cols-1 gap-12 md:grid-cols-2 items-center">
-        <div className="flex flex-col items-center">
-          <img
-            src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-monitor.gif"
-            alt="Lain, Serial Experiments Lain, watching a terminal glow"
-            className="h-80 w-auto dark:hidden"
-          />
-          <img
-            src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-desk.gif"
-            alt="Lain, Serial Experiments Lain, at her desk at night"
-            className="h-80 w-auto hidden dark:block"
-          />
-        </div>
-        <div className="flex flex-col gap-4">
-          <h3 className="font-mono text-[11px] uppercase tracking-wide text-text-dim">
-            GitHub Repositories
-          </h3>
-          <div className="h-80">
-            <RepoList />
+    <footer id="contact" className="mx-auto w-full max-w-content px-6 pb-10 pt-16">
+      <div className="grid grid-cols-1 items-center gap-10 rounded-2xl border bg-surface/30 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-monitor.gif"
+          alt="Lain, Serial Experiments Lain, watching a terminal glow"
+          loading="lazy"
+          className="mx-auto h-56 w-auto rounded-xl dark:hidden"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://raw.githubusercontent.com/AbhinavJoe/AbhinavJoe/main/public/lain-desk.gif"
+          alt="Lain, Serial Experiments Lain, at her desk at night"
+          loading="lazy"
+          className="mx-auto hidden h-56 w-auto rounded-xl dark:block"
+        />
+        <div className="text-center sm:col-start-2 sm:row-start-1 sm:text-left">
+          <p className="font-mono text-xs uppercase tracking-widest text-accent">Contact</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Let&apos;s talk shop.</h2>
+          <p className="mt-3 text-muted">Backend, infra, or a queue that keeps double-firing.</p>
+          <div className="mt-6 flex justify-center sm:justify-start">
+            <Socials />
           </div>
         </div>
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6">
+        <p className="text-xs text-faint">
+          &copy; {new Date().getFullYear()} Abhinav Joshi · Built with Next.js &amp; too much coffee
+        </p>
+        <LocalClock />
       </div>
     </footer>
   );
