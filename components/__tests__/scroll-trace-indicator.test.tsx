@@ -61,24 +61,27 @@ describe("ScrollTraceIndicator", () => {
   });
 });
 
-// Tests for the marker's temporal smoothing: the rendered marker must chase
-// the live scroll position over several frames rather than teleporting with
-// it, so a fast wheel flick plays the inter-stage morph as a glide instead
-// of a snap. Driven through a fake rAF clock so frame timing (and therefore
-// the smoothing curve) is fully deterministic, over a minimal virtual page
+// Tests for the marker's clock-driven morph: a stage change must play out over
+// time rather than teleporting with the scroll, so a fast wheel flick shows a
+// glide instead of a snap. Driven through a fake rAF clock so frame timing is
+// fully deterministic, over a minimal virtual page
 // (jsdom has no layout: without pinned rects every element measures at the
 // live scroll row and there would be no distance between stages to smooth
 // across).
-describe("ScrollTraceIndicator smoothed scroll tracking", () => {
+describe("ScrollTraceIndicator stage morph", () => {
   type RafCallback = (time: number) => void;
 
   // Virtual page: two stages 3000px apart on a 4000px-tall document.
   const PAGE_HEIGHT = 4000;
   const STAGE_B_TOP = 3000;
+  // Stage A sits where the hero role line does: comfortably below the nav.
+  const ALPHA_TOP = 200;
   const HEADING_HEIGHT = 30;
   // Stage B's settled underline sits at its heading's bottom plus
   // UNDERLINE_GAP (4), in document space.
   const STAGE_B_SETTLED_Y = STAGE_B_TOP + HEADING_HEIGHT + 4;
+  // Past stage B's window (see the morph tests below): it is docked here.
+  const PAST_B_TRIGGER = 2616;
 
   let pendingCallbacks: Map<number, RafCallback>;
   let nextRafId: number;
@@ -147,7 +150,7 @@ describe("ScrollTraceIndicator smoothed scroll tracking", () => {
   function mountTracedPage() {
     const rendered = render(<TaggedPage />);
     const [alpha, beta] = Array.from(rendered.container.querySelectorAll("h2"));
-    pinToDocumentTop(alpha, 0);
+    pinToDocumentTop(alpha, ALPHA_TOP);
     pinToDocumentTop(beta, STAGE_B_TOP);
     return rendered;
   }
@@ -174,37 +177,86 @@ describe("ScrollTraceIndicator smoothed scroll tracking", () => {
     return parseFloat(match[2]);
   }
 
-  it("eases into place over several frames after a fast scroll instead of teleporting", () => {
+  // Stage B's window, with the mocked 768px viewport: it closes (docks) when
+  // its heading reaches mid-screen — scrollY 3000 - 0.5*768 = 2616 — and
+  // opens a 0.42*768 = 322px span earlier, at ~2293.
+  const B_WINDOW_START = 2293;
+  const B_DOCK = 2616;
+
+  function markerYAt(container: HTMLElement, scroll: number): number {
+    scrollYValue = scroll;
+    flushFrames(2);
+    return markerY(primaryMarker(container));
+  }
+
+  it("rests on the first heading's underline until the next heading enters", () => {
     const { container, unmount } = mountTracedPage();
-    flushFrames(2); // first loop pass initializes at the current scroll position
+    expect(markerYAt(container, 0)).toBeCloseTo(ALPHA_TOP + HEADING_HEIGHT + 4, 0);
+    unmount();
+  });
 
-    // A fast flick lands the viewport instantly at stage B's arrival point
-    // (its heading top, 3000, minus SETTLE_OFFSET 260). While catching up,
-    // the marker rides the rail as a traveling dot whose row follows the
-    // smoothed scroll (row = scroll + SETTLE_OFFSET 260 - half the 10px
-    // dot), then settles into stage B's underline at STAGE_B_SETTLED_Y.
-    scrollYValue = STAGE_B_TOP - 260;
-    flushFrames(1);
-    const firstFrameY = markerY(primaryMarker(container));
+  it("grows from the rail dot into the next heading's underline across its window", () => {
+    const { container, unmount } = mountTracedPage();
+    flushFrames(2);
 
-    // After the jump frame the marker is still most of the way up the rail
-    // — the travel is spread over the following frames, not spent at once.
-    expect(firstFrameY).toBeLessThan(STAGE_B_SETTLED_Y - 200);
+    // Before the window opens the marker is the plain dot on the rail
+    // (the first heading is long gone), at its fixed viewport row.
+    const dotRow = (scroll: number) => scroll + 260 - 5;
+    expect(markerYAt(container, B_WINDOW_START - 50)).toBeCloseTo(dotRow(B_WINDOW_START - 50), 0);
 
-    let previousY = firstFrameY;
-    for (let i = 0; i < 8; i++) {
-      flushFrames(1);
-      const y = markerY(primaryMarker(container));
-      expect(y).toBeGreaterThan(previousY);
-      previousY = y;
+    // Through the window it travels smoothly (never moving backwards)...
+    let previous = -Infinity;
+    for (let scroll = B_WINDOW_START; scroll <= B_DOCK; scroll += 20) {
+      const y = markerYAt(container, scroll);
+      expect(y).toBeGreaterThanOrEqual(previous - 0.001);
+      previous = y;
     }
 
-    // ~1.6s after the jump the marker has fully caught up and settled into
-    // stage B's underline.
-    flushFrames(90);
-    expect(markerY(primaryMarker(container))).toBeCloseTo(STAGE_B_SETTLED_Y, 0);
-
+    // ...and is fully docked on B's underline when the heading hits mid-screen.
+    expect(markerYAt(container, B_DOCK)).toBeCloseTo(STAGE_B_SETTLED_Y, 0);
     unmount();
+  });
+
+  it("is a pure function of scroll: the same scrollY gives the same marker whichever way you arrived", () => {
+    const { container, unmount } = mountTracedPage();
+    flushFrames(2);
+    markerYAt(container, B_DOCK);
+    const comingBack = markerYAt(container, 2450);
+
+    markerYAt(container, 0);
+    const goingForward = markerYAt(container, 2450);
+
+    expect(comingBack).toBeCloseTo(goingForward, 5);
+    unmount();
+  });
+
+  it("never streaks through the viewport when the page jumps around", () => {
+    const { container, unmount } = mountTracedPage();
+    flushFrames(2);
+    // Whatever the history, every frame the marker must be within (or just
+    // beside) the viewport of the CURRENT scroll position.
+    for (const jump of [2900, 0, 1500, 300, 2600, 100, 2450, 3200, 40]) {
+      const y = markerYAt(container, jump);
+      expect(y).toBeGreaterThan(jump - 200);
+      expect(y).toBeLessThan(jump + 768 + 200);
+    }
+    unmount();
+  });
+
+  it("flags a circle target as covered by the marker once the marker rests on it", () => {
+    const rendered = render(
+      <div>
+        <h2 data-trace-group="a" data-trace-shape="circle">
+          Tile
+        </h2>
+        <ScrollTraceIndicator />
+      </div>
+    );
+    const tile = rendered.container.querySelector("h2") as HTMLElement;
+    pinToDocumentTop(tile, 200);
+    flushFrames(3);
+    expect(tile.style.getPropertyValue("--trace-cover")).toBe("1");
+    rendered.unmount();
   });
 
   it("keeps instant, unsmoothed positioning under prefers-reduced-motion", () => {
@@ -223,7 +275,7 @@ describe("ScrollTraceIndicator smoothed scroll tracking", () => {
     try {
       const { container, unmount } = mountTracedPage();
       flushFrames(2);
-      scrollYValue = STAGE_B_TOP - 260;
+      scrollYValue = PAST_B_TRIGGER;
       flushFrames(1);
       const immediateY = markerY(primaryMarker(container));
       flushFrames(30);
