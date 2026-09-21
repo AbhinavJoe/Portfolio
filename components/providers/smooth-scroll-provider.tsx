@@ -2,6 +2,7 @@
 
 import Lenis from "lenis";
 import { useEffect } from "react";
+import { subscribeFrame } from "@/lib/frame-loop";
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -9,16 +10,12 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     if (prefersReduced) return;
 
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
-    let rafId: number;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
+    // Order 0: Lenis applies this frame's scroll before the scroll-trace
+    // marker (order 10) reads window.scrollY.
+    const unsubscribe = subscribeFrame((time) => lenis.raf(time), 0);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      unsubscribe();
       lenis.destroy();
     };
   }, []);
