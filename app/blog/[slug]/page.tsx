@@ -25,7 +25,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const mdxComponents = createMdxComponents(headings);
 
   return (
-    <article className="mx-auto max-w-5xl px-6 py-16 md:py-20">
+    <article className="mx-auto max-w-5xl px-6 pb-16 pt-32 md:pb-20">
       <Link
         href="/blog"
         className="font-mono text-[11.5px] uppercase tracking-wide text-text-dim hover:text-accent-strong"

@@ -14,7 +14,7 @@ export function BlogListClient({ posts, tags }: { posts: BlogPost[]; tags: strin
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-20 md:py-24">
+    <div className="mx-auto max-w-5xl px-6 pb-20 pt-32 md:pb-24">
       <div className="font-mono text-[11px] uppercase tracking-wide text-text-dim">Writing</div>
       <h1 className="mt-3 text-balance font-heading text-4xl font-semibold leading-[1.04] tracking-tight text-text sm:text-5xl">
         Notes from the load-bearing parts
@@ -26,7 +26,7 @@ export function BlogListClient({ posts, tags }: { posts: BlogPost[]; tags: strin
       <div className="mt-10">
         <TagFilter tags={tags} activeTag={activeTag} onSelect={setActiveTag} />
       </div>
-      <div className="mt-4 flex flex-col">
+      <div className="mt-6 flex flex-col gap-4">
         {filtered.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
